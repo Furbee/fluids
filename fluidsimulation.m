@@ -1,6 +1,6 @@
 %% declaration
 
-g = 9.82; % gravity
+g = -9.82; % gravity
 rho = 1e3; % density (1e3 for water, 1.3 for air)
 dt = 1e-2; % time step
 tf = 4; % final time
@@ -18,11 +18,11 @@ un = zeros(nx+1,ny); % next speed in x-direction
 vn = zeros(nx,ny+1); % next speed in y-direction
 rhs = zeros(nx,ny); % right hand side
 
-for t=1:100
+for t=1:10
     
     %% advect
     
-    umax = max(max(max(u)),max(max(v+sqrt(5*lxy*g)))); % update max speed
+    umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
     dt = lxy/umax; % update dt
     dxy = 0.5;
     
@@ -31,8 +31,8 @@ for t=1:100
         for b = 1:ny
             tx = a - dt*(u(a,b));
             ty = b - dt*(v(a,b));
-            alphax = (floor(tx) - a);
-            alphay = (floor(ty) - b);
+            alphax = (tx - floor(tx));
+            alphay = (ty - floor(ty));
             un(a,b) = (1-alphax)*u(a,b) + alphax*u(a+1,b);
             vn(a,b) = (1-alphay)*v(a,b) + alphay*v(a,b+1);
         end
@@ -47,13 +47,11 @@ for t=1:100
     
     for a = 1:nx
         for b = 1:ny
-            un(a,b) = u(a,b)*dt*g;
-            vn(a,b) = v(a,b)*dt*g;
+            vn(a,b) = v(a,b) + dt*g;
         end
     end
     
     % update u and v
-    u = un;
     v = vn;
     
     
@@ -96,4 +94,26 @@ for t=1:100
         end
     end
     
+    for a = 2:nx
+        for b = 2:ny
+            if a==2 || a == nx
+                rhs(a,b) = rhs(a,b) - (scale * u(a,b));
+                rhs(a,b) = rhs(a,b) + (scale * u(a+1,b));
+            end if b==2 || b == ny
+                rhs(a,b) = rhs(a,b) - (scale * v(a,d));
+                rhs(a,b) = rhs(a,b) + (scale * v(a,b+1));
+            end
+        end
+    end
+    for a = 1:nx+1
+        for b = 1:ny
+            un(a,1) = 0;
+            un(a,ny) = 0;
+            un(1,b) = 0;
+            un(nx+1,b) = 0;
+        end
+    end
+    
+    %imagesc(v');
+    %drawnow
 end
