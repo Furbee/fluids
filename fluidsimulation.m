@@ -23,8 +23,9 @@ Aplusj = zeros(nx,ny); %
 tau_mic = 0.97;
 sigma_mic = 0.25;
 
+colormap winter
 
-for t=1:10
+for t=1:400
     
     %% advect
     
@@ -74,22 +75,22 @@ for t=1:10
     
     
     % Modify RHS for solid velocities (fig. 4.3 in Bridson)
-    for a = 2:nx-1
-        for b = 2:ny-1
-            if a == 2
-                rhs(a,b) = rhs(a,b) - (scale * u(a,b));
-            end
-            if a == nx-1
-                rhs(a,b) = rhs(a,b) + (scale * u(a+1,b));
-            end
-            if b == 2
-                rhs(a,b) = rhs(a,b) - (scale * v(a,b));
-            end
-            if b == ny-1
-                rhs(a,b) = rhs(a,b) + (scale * v(a,b+1));
-            end
-        end
-    end
+%     for a = 2:nx-1
+%         for b = 2:ny-1
+%             if a == 2
+%                 rhs(a,b) = rhs(a,b) - (scale * u(a,b));
+%             end
+%             if a == nx-1
+%                 rhs(a,b) = rhs(a,b) + (scale * u(a+1,b));
+%             end
+%             if b == 2
+%                 rhs(a,b) = rhs(a,b) - (scale * v(a,b));
+%             end
+%             if b == ny-1
+%                 rhs(a,b) = rhs(a,b) + (scale * v(a,b+1));
+%             end
+%         end
+%     end
     
     % Set up matrix entities for the pressure equations
     scale = dt / (rho * dxy * dxy);
@@ -115,11 +116,12 @@ for t=1:10
    
     % MIC(0) preconditioner
     
-    A = sparse(Adiag);
+    A = delsq(numgrid('S',92));
     
     L = ichol(A,struct('michol','on'));
-    [p, flag1,rr1,iter1,rv1] = pcg(A,rhs,0.01,50,L,L');
+    [p, flag1,rr1,iter1,rv1] = pcg(A,rhs(:),0.01,50,L,L');
     
+    p = reshape(p,[90 90]);
     
     % Pressure update
     scale = dt/(rho*dxy);
@@ -158,10 +160,8 @@ for t=1:10
     v = vn;
     
     
+    %imshowpair(u',v');
     
-    
-    
-    
-    %imagesc(v');
-    %drawnow
+    imagesc(p')
+    drawnow
 end
