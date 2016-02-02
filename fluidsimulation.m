@@ -20,14 +20,28 @@ rhs = zeros(nx,ny); % right hand side
 Adiag = zeros(nx,ny); % Coeffcient matrix for pressure equations
 Aplusi = zeros(nx,ny); %
 Aplusj = zeros(nx,ny); %
+
+% MIC
 tau_mic = 0.97;
 sigma_mic = 0.25;
+precon = zeros(nx,ny);
+
+% Apply precon
+q = zeros(nx,ny);
+z = zeros(nx,ny);
+
+s = zeros(nx,ny); % Search vector (matrix)
+iter_limit = 100;
+
 
 colormap winter
 
-for t=1:400
+for outer_t=1:4
     
-    %% advect
+    
+    
+
+    % advect
     
     umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
     dt = lxy/umax; % update dt
@@ -63,6 +77,12 @@ for t=1:400
     
     
     %% project
+    
+    
+    rhs = zeros(nx,ny); % right hand side
+    Adiag = zeros(nx,ny); % Coeffcient matrix for pressure equations
+    Aplusi = zeros(nx,ny); %
+    Aplusj = zeros(nx,ny); %
     
     % Calculate negative divergence (fig 4.2 in Bridson)
     scale = 1/dxy;
@@ -113,15 +133,119 @@ for t=1:400
         end
     end
     
+    
+    % Apply precon
+    q = zeros(nx,ny);
+    z = zeros(nx,ny);
+
+    s = zeros(nx,ny); % Search vector (matrix)
+    
    
     % MIC(0) preconditioner
+    for a = 2:nx-1
+        for b = 2:ny-1
+            
+            e = Adiag(a,b);
+            
+            px = Aplusi(a-1,b) * precon(a-1,b);
+            py = Aplusj(a-1,b) * precon(a-1,b);
+            e = e - (px*px + tau_mic*px*py);
+
+            px = Aplusi(a,b-1) * precon(a,b-1);
+            py = Aplusj(a,b-1) * precon(a,b-1);
+            e = e - (py*py + tau_mic*px*py);
+            
+            if e < sigma_mic * Adiag(a,b)
+                    e = Adiag(a,b);
+            end
+            
+            precon(a,b) = 1/sqrt(e);
+            
+        end
+    end
     
-    A = delsq(numgrid('S',92));
     
-    L = ichol(A,struct('michol','on'));
-    [p, flag1,rr1,iter1,rv1] = pcg(A,rhs(:),0.01,50,L,L');
+    % Apply precon
+    for a = 2:nx-1
+        for b = 2:ny-1
+            
+            t = rhs(a,b);            
+            t = t - Aplusi(a-1,b) * precon(a-1,b) * q(a-1,b);
+            t = t - Aplusj(a,b-1) * precon(a,b-1) * q(a,b-1);
+            
+            q(a,b) = t * precon(a,b);
+            
+        end
+    end
     
-    p = reshape(p,[90 90]);
+    for a = nx-1:-1:2
+        for b = ny-1:-1:2
+            
+            t = q(a,b);
+            t = t - Aplusi(a,b) * precon(a,b) * z(a+1,b);
+            t = t - Aplusj(a,b) * precon(a,b) * z(a,b+1);
+            
+            
+            
+            z(a,b) = t * precon(a,b);
+            
+        end
+    end
+    % End apply precon
+    
+    
+    s = z;
+    
+    sigma = dot(rhs,z);
+    
+    % Iterative solver
+    for iter = 1:iter_limit
+        
+        % Matrix vector product
+        for a = 2:nx-2
+            for b = 2:ny-2
+                
+                t = Adiag(a,b) * s(a,b);
+                
+                t = t + Aplusi(a-1,b) * s(a-1,b);
+                t = t + Aplusj(a,b-1) * s(a,b-1);
+                t = t + Aplusi(a,b) * s(a+1,b);
+                t = t + Aplusj(a,b) * s(a,b+1);
+                
+                z(a,b) = t;
+                
+            end
+        end
+        
+        alpha = sigma ./ dot(z,s);
+        
+        
+        
+        
+        
+        
+        
+    end
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+%     A = delsq(numgrid('S',92));
+%     
+%     L = ichol(A,struct('michol','on'));
+%     [p, flag1,rr1,iter1,rv1] = pcg(A,rhs(:),0.01,50,L,L');
+%     
+%     temp = rhs(:);
+%     
+%     p = reshape(p,[90 90]);
+    
     
     % Pressure update
     scale = dt/(rho*dxy);
