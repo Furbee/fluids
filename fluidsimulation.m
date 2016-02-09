@@ -4,8 +4,8 @@ g = -9.82; % gravity
 rho = 1e3; % density (1e3 for water, 1.3 for air)
 dt = 1e-2; % time step
 tf = 4; % final time
-nx = 20; % number of x-gridpoints
-ny = 20; % number of y-gridpoints
+nx = 90; % number of x-gridpoints
+ny = 90; % number of y-gridpoints
 lxy = 1; % size of each grid
 
 %% create grid
@@ -179,7 +179,7 @@ for outer_t=1:100
         end
     end
     
-    
+    p = project( Adiag, Aplusi, Aplusj, rhs, precon, nx, ny, iter_limit );
     
     % Pressure update
     scale = dt/(rho*dxy);
@@ -228,9 +228,8 @@ for outer_t=1:100
     
     %imshowpair(u',v');
     
-    temp_p = reshape(p, [nx ny]);
     temp_u = reshape(u, [ny nx+1]);
     
-    imagesc(temp_p)
+    imagesc(temp_u)
     drawnow
 end

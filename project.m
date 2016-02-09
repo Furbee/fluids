@@ -1,4 +1,5 @@
-function [ z, p ] = project( Adiag, Aplusi, Aplusj, rhs )
+function [ p ] = project( Adiag, Aplusi, Aplusj, rhs, precon, nx, ny, ...
+    iter_limit)
 %PROJECT Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -66,8 +67,6 @@ for iter = 1:iter_limit
     
     % Apply precon
     z = applyPrecon(Aplusi, Aplusj, rhs, precon, nx, ny);
-    
-    find(isnan(z))
     
     sigmaNew = dot(z, rhs);
     
