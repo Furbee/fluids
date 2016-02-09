@@ -6,7 +6,8 @@ dt = 1e-2; % time step
 tf = 4; % final time
 nx = 90; % number of x-gridpoints
 ny = 90; % number of y-gridpoints
-lxy = 1; % size of each grid
+%lxy = 1; % size of each grid
+lxy = 1.0/min(nx,ny);
 
 %% create grid
 
@@ -33,18 +34,19 @@ q = zeros(nx*ny,1);
 z = zeros(nx*ny,1);
 
 s = zeros(nx*ny,1); % Search vector (matrix)
-iter_limit = 80;
+iter_limit = 600;
 
 
-colormap winter
+%colormap winter
 
 for outer_t=1:100
     
     
     umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
     dt = lxy/umax; % update dt
-    %     dt = 0.0025;
-    dxy = 0.5;
+    %dt = 0.00025;
+    %dxy = 0.5;
+    dxy = lxy;
     
     %% advect
     
@@ -96,13 +98,19 @@ for outer_t=1:100
     
     % Calculate negative divergence (fig 4.2 in Bridson)
     scale = 1/dxy;
+    
+    idx = 1;
     for y = 1:ny
         for x = 1:nx
-            idx = getIdx(x,y,nx);
+%             idx = getIdx(x,y,nx);
             rhs(idx) = -scale * ((u(idx + 1) - u(idx)) ...
                 + (v(idx + nx) - v(idx)));
+            assert(isnan(rhs(idx)) == 0)
+            
+            idx = idx + 1;
         end
     end
+    
     
     
     
@@ -127,6 +135,9 @@ for outer_t=1:100
     
     % Set up matrix entities for the pressure equations
     scale = dt / (rho * dxy * dxy);
+    Adiag = zeros(nx*ny, 1); % Coeffcient matrix for pressure equations
+%     Aplusi = zeros(nx*ny, 1); %
+%     Aplusj = zeros(nx*ny, 1); %
     
     idx = 1;
     for y = 1:ny
@@ -194,33 +205,19 @@ for outer_t=1:100
     end
     
     % Boundaries, x
-    for a = 1:nx+1
-        for b = 1:ny
-            idx = getIdx(a,1,nx);
-            un(idx) = 0;
-            idx = getIdx(a,ny,nx);
-            un(idx) = 0;
-            idx = getIdx(1,b,nx);
-            un(idx) = 0;
-            idx = getIdx(nx+1,b,nx);
-            un(idx) = 0;
-        end
+    for y = 1:ny
+       idx = getIdx(1,y,nx);
+       un(idx) =  0.0;
+       idx = getIdx(nx,y,nx);
+       un(idx) = 0.0;
     end
     
-    % Boundaries, y
-    for a = 1:nx
-        for b = 1:ny+1
-            idx = getIdx(1,b,nx);
-            vn(idx) = 0;
-            idx = getIdx(nx,b,nx);
-            vn(idx) = 0;
-            idx = getIdx(a,1,nx);
-            vn(idx) = 0;
-            idx = getIdx(a,ny+1,nx);
-            vn(idx) = 0;
-        end
+    for x = 1:nx
+        idx = getIdx(x,1,nx);
+        vn(idx) = 0.0;
+        idx = getIdx(x,ny,nx);
+        vn(idx) = 0.0;
     end
-    
     
     u = un;
     v = vn;
@@ -229,7 +226,18 @@ for outer_t=1:100
     %imshowpair(u',v');
     
     temp_u = reshape(u, [ny nx+1]);
+    temp_v = reshape(v, [nx, ny+1]);
     
-    imagesc(temp_u)
+%     imagesc(temp_u)
+    imagesc(temp_v);
+
     drawnow
+    
 end
+
+
+
+
+
+
+
