@@ -4,8 +4,8 @@ g = -9.82; % gravity
 rho = 0.1; % density (1e3 for water, 1.3 for air)
 dt = 1e-2; % time step
 tf = 4; % final time
-nx = 64; % number of x-gridpoints
-ny = 64; % number of y-gridpoints
+nx = 32; % number of x-gridpoints
+ny = 32; % number of y-gridpoints
 %lxy = 1; % size of each grid
 lxy = 1.0/min(nx,ny);
 
@@ -14,10 +14,10 @@ lxy = 1.0/min(nx,ny);
 p = zeros(nx*ny, 1); % pressure at each grid
 d = zeros(nx*ny, 1);
 dn = zeros(nx*ny, 1);
-u = ones((nx+1)*ny, 1); % speed in x-direction
+u = zeros((nx+1)*ny, 1); % speed in x-direction
 v = zeros(nx*(ny+1), 1); % speed in y-direction
 pn = zeros(nx*ny, 1); % next pressure at each grid
-un = ones((nx+1)*ny, 1); % next speed in x-direction
+un = zeros((nx+1)*ny, 1); % next speed in x-direction
 vn = zeros(nx*(ny+1), 1); % next speed in y-direction
 rhs = zeros(nx*ny, 1); % right hand side
 Adiag = zeros(nx*ny, 1); % Coeffcient matrix for pressure equations
@@ -34,7 +34,7 @@ q = zeros(nx*ny,1);
 z = zeros(nx*ny,1);
 
 s = zeros(nx*ny,1); % Search vector (matrix)
-iter_limit = 600;
+iter_limit = 300;
 
 
 %colormap winter
@@ -44,21 +44,21 @@ dxy = lxy;
 
 
 
-for outer_t=1:100
+for outer_t=1:300
     
     
     %umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
     %dt = lxy/umax; % update dt
-    dt = 0.005;
+    dt = 0.01;
     %dxy = 0.5;
     
-    [ d ] = addInFlow( 0.45, 0.2, 0.55, 0.21, nx, ny, 0.5, 0.5, ...
+    [ d ] = addInFlow( 0.45, 0.8, 0.55, 0.81, nx, ny, 0.5, 0.5, ...
         dxy, 1.0, d);
     
-    [ u ] = addInFlow( 0.45, 0.2, 0.55, 0.21, nx, ny, 0.0, 0.5, ...
+    [ u ] = addInFlow( 0.45, 0.8, 0.55, 0.81, nx+1, ny, 0.0, 0.5, ...
         dxy, 0.0, u);
-    [ v ] = addInFlow( 0.45, 0.2, 0.55, 0.21, nx, ny, 0.5, 0.0, ...
-        dxy, 3.0, v);
+    [ v ] = addInFlow( 0.45, 0.8, 0.55, 0.81, nx, ny, 0.5, 0.0, ...
+        dxy, 150.0, v);
     
     
     
@@ -86,7 +86,7 @@ for outer_t=1:100
     for y = 1:ny
         for x = 1:nx
             %             idx = getIdx(x,y,nx);
-            rhs(idx) = -scale * ((u(getIdx(x+1,y,nx)) - u(getIdx(x,y,nx))) ...
+            rhs(idx) = -scale * ((u(getIdx(x+1,y,nx+1)) - u(getIdx(x,y,nx+1))) ...
                 + (v(getIdx(x,y+1,nx)) - v(getIdx(x,y,nx))));
             assert(isnan(rhs(idx)) == 0)
             
@@ -184,10 +184,10 @@ for outer_t=1:100
     idx = 1;
     for y = 1:ny
         for x = 1:nx
-            %idx = getIdx(x,y,nx);
-            uvidx = getIdx(x,y,nx);
+            uvidx = getIdx(x,y,nx+1);
             u(uvidx) = u(uvidx) - scale * p(idx);
             u(uvidx+1) = u(uvidx+1) + scale * p(idx);
+            uvidx = getIdx(x,y,nx);
             v(uvidx) = v(uvidx) - scale * p(idx);
             v(uvidx + nx) = v(uvidx + nx) + scale * p(idx);
             idx = idx + 1;
@@ -196,9 +196,9 @@ for outer_t=1:100
     
     % Boundaries, x
     for y = 1:ny
-        idx = getIdx(1,y,nx);
+        idx = getIdx(1,y,nx+1);
         u(idx) =  0.0;
-        idx = getIdx(nx,y,nx);
+        idx = getIdx(nx,y,nx+1);
         u(idx) = 0.0;
     end
     
@@ -221,7 +221,7 @@ for outer_t=1:100
             ix = x + 0.5;
             iy = y + 0.5;
             
-            [x0, y0] = rungeKutta3( ix, iy, 0.5, 0.5, dt, u, v, dxy, nx, ny);
+            [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
             dn(idx) = cerp2(x0, y0, nx, ny, 0.5, 0.5, d);
             idx = idx + 1;
         end
@@ -235,7 +235,7 @@ for outer_t=1:100
             ix = x + 0.0;
             iy = y + 0.5;
             
-            [x0, y0] = rungeKutta3( ix, iy, 0.0, 0.5, dt, u, v, dxy, nx+1, ny);
+            [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
             un(idx) = cerp2(x0, y0, nx+1, ny, 0.0, 0.5, u);
             idx = idx + 1;
         end
@@ -249,7 +249,7 @@ for outer_t=1:100
             ix = ix + 0.5;
             iy = iy + 0.0;
             
-            [x0, y0] = rungeKutta3( ix, iy, 0.5, 0.0, dt, u, v, dxy, nx, ny+1);
+            [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
             vn(idx) = cerp2(x0, y0, nx, ny+1, 0.5, 0.0, v );
             idx = idx+1;
         end
@@ -262,12 +262,20 @@ for outer_t=1:100
     
     %imshowpair(u',v');
     
+    
+%     u(getIdx(10,10,nx)) = 100;
+%     u(getIdx(10,12,nx)) = 100;
+%     
+%     pause(5)
+    
+    
+    
     temp_d = reshape(d, [ny, nx]);
-    temp_u = reshape(u, [ny, nx+1]);
-    temp_v = reshape(v, [nx, ny+1]);
+    temp_u = reshape(u, [ny+1, nx]);
+    temp_v = reshape(v, [ny, nx+1]);
     
     %     imagesc(temp_u)
-    imagesc(temp_v');
+    imagesc(temp_d');
     
     %imagesc(reshape(p, [ny, nx]));
     

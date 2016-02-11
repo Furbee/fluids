@@ -16,7 +16,6 @@ for y = iy0:iy1
     for x = ix0:ix1
         idx = getIdx(x,y,w);
         if abs(src_out(idx)) < abs(v)
-            
             src_out(idx) = v;
         end
     end
