@@ -44,6 +44,11 @@ dxy = lxy;
 
 
 
+disp('Writing to newfile.avi...')
+video = VideoWriter('newfile.avi','Uncompressed AVI');
+open(video)
+
+
 for outer_t=1:100
     
     
@@ -267,16 +272,16 @@ for outer_t=1:100
     temp_v = reshape(v, [nx, ny+1]);
     
     %     imagesc(temp_u)
-    imagesc(temp_v');
+    imagesc(temp_d');
+    F = getframe;
+    writeVideo(video,F)
     
     %imagesc(reshape(p, [ny, nx]));
     
-    drawnow
-    
     
 end
-
-
+close(video)
+disp('Done!')
 
 
 
