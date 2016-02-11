@@ -44,7 +44,12 @@ dxy = lxy;
 
 
 
-for outer_t=1:300
+disp('Writing to newfile.avi...')
+video = VideoWriter('newfile.avi','Uncompressed AVI');
+open(video)
+
+
+for outer_t=1:100
     
     
     %umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
@@ -276,15 +281,15 @@ for outer_t=1:300
     
     %     imagesc(temp_u)
     imagesc(temp_d');
+    F = getframe;
+    writeVideo(video,F)
     
     %imagesc(reshape(p, [ny, nx]));
     
-    drawnow
-    
     
 end
-
-
+close(video)
+disp('Done!')
 
 
 
