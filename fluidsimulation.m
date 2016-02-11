@@ -86,8 +86,8 @@ for outer_t=1:100
     for y = 1:ny
         for x = 1:nx
             %             idx = getIdx(x,y,nx);
-            rhs(idx) = -scale * ((u(idx + 1) - u(idx)) ...
-                + (v(idx + nx) - v(idx)));
+            rhs(idx) = -scale * ((u(getIdx(x+1,y,nx)) - u(getIdx(x,y,nx))) ...
+                + (v(getIdx(x,y+1,nx)) - v(getIdx(x,y,nx))));
             assert(isnan(rhs(idx)) == 0)
             
             idx = idx + 1;
@@ -185,10 +185,11 @@ for outer_t=1:100
     for y = 1:ny
         for x = 1:nx
             %idx = getIdx(x,y,nx);
-            u(idx) = u(idx) - scale * p(idx);
-            u(idx + 1) = u(idx + 1) + scale * p(idx);
-            v(idx) = v(idx) - scale * p(idx);
-            v(idx + nx) = v(idx + nx) + scale * p(idx);
+            uvidx = getIdx(x,y,nx);
+            u(uvidx) = u(uvidx) - scale * p(idx);
+            u(uvidx+1) = u(uvidx+1) + scale * p(idx);
+            v(uvidx) = v(uvidx) - scale * p(idx);
+            v(uvidx + nx) = v(uvidx + nx) + scale * p(idx);
             idx = idx + 1;
         end
     end
@@ -266,7 +267,7 @@ for outer_t=1:100
     temp_v = reshape(v, [nx, ny+1]);
     
     %     imagesc(temp_u)
-    imagesc(temp_d');
+    imagesc(temp_v');
     
     %imagesc(reshape(p, [ny, nx]));
     
