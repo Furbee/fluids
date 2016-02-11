@@ -1,13 +1,14 @@
-function [ p ] = project( Adiag, Aplusi, Aplusj, rhs, precon, nx, ny, ...
+function [ p, rhs ] = project( Adiag, Aplusi, Aplusj, rhs, precon, nx, ny, ...
     iter_limit)
 %PROJECT Summary of this function goes here
 %   Detailed explanation goes here
 
 p = zeros(size(rhs));
+z = zeros(size(rhs));
 
 % Apply precon
 
-z = applyPrecon(Aplusi, Aplusj, rhs, precon, nx, ny);
+z = applyPrecon(Aplusi, Aplusj, rhs, z, precon, nx, ny);
 
 s = z;
 
@@ -40,10 +41,10 @@ for iter = 1:iter_limit
             if y > 1
                 t = t + Aplusj(idx - nx) * s(idx - nx);
             end
-            if x < nx-1
+            if x < nx
                 t = t + Aplusi(idx) * s(idx + 1);
             end
-            if y < ny-1
+            if y < ny
                 t = t + Aplusj(idx) * s(idx + nx);
             end
             z(idx) = t;
@@ -60,13 +61,13 @@ for iter = 1:iter_limit
     
     maxError = max(norm(rhs));
     if maxError < 1e-5
-        %printf('Exiting solver after %d iterations, maximum error is %f\n', iter, maxError);
-        disp('Exiting solver');
+        fprintf('Exiting solver after %d iterations, maximum error is %f\n', iter, maxError);
+        %disp('Exiting solver after ' << iter + ' iterations');
         return;
     end
     
     % Apply precon
-    z = applyPrecon(Aplusi, Aplusj, rhs, precon, nx, ny);
+    z = applyPrecon(Aplusi, Aplusj, rhs, z, precon, nx, ny);
     
     sigmaNew = dot(z, rhs);
     
@@ -74,11 +75,13 @@ for iter = 1:iter_limit
     %         for idx = 1:nx*ny
     %             s(idx) = z(idx) + s(idx) * sigmaNew/sigma;
     %         end
-    s = z + s * sigmaNew/sigma;
+    s = z + s * (sigmaNew/sigma);
     
     sigma = sigmaNew;
     
 end
+
+maxError = max(norm(rhs))
 
 
 end

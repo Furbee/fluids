@@ -1,9 +1,8 @@
-function [ z ] = applyPrecon( Aplusi, Aplusj, rhs, precon, nx, ny )
+function [ z ] = applyPrecon( Aplusi, Aplusj, rhs, z_in, precon, nx, ny )
 %APPLYPRECON Summary of this function goes here
 %   Detailed explanation goes here
 
-q = zeros(size(precon,1),1);
-z = zeros(size(precon,1),1);
+z = z_in;
 
 idx = 1;
 for y = 1:ny
@@ -11,28 +10,28 @@ for y = 1:ny
         t = rhs(idx);
         
         if x > 1
-            t = t - Aplusi(idx - 1) * precon(idx - 1) * q(idx - 1);
+            t = t - Aplusi(idx - 1) * precon(idx - 1) * z(idx - 1);
         end
         if y > 1
-            t = t - Aplusj(idx - nx) * precon(idx - nx) * q(idx - nx);
+            t = t - Aplusj(idx - nx) * precon(idx - nx) * z(idx - nx);
         end
         
-        q(idx) = t * precon(idx);
+        z(idx) = t * precon(idx);
         
         idx = idx + 1;
         
     end
 end
 
-for y = ny-1:-1:1
-    for x = nx-1:-1:1
+for y = ny:-1:1
+    for x = nx:-1:1
         idx = getIdx(x,y,nx);
-        t = q(idx);
+        t = z(idx);
         
-        if x < nx-1
+        if x < nx
             t = t - Aplusi(idx) * precon(idx) * z(idx + 1);
         end
-        if y < ny-1
+        if y < ny
             t = t - Aplusj(idx) * precon(idx) * z(idx + nx);
         end
         
