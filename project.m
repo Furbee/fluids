@@ -32,7 +32,7 @@ for iter = 1:iter_limit
     idx = 1;
     for y = 1:ny
         for x = 1:nx
-            %                 idx = getIdx(x,y,nx);
+            %idx = getIdx(x,y,nx);
             t = Adiag(idx) * s(idx);
             
             if x > 1
@@ -47,8 +47,9 @@ for iter = 1:iter_limit
             if y < ny
                 t = t + Aplusj(idx) * s(idx + nx);
             end
+            
             z(idx) = t;
-            %                 dbstop if isnan(t) == 1
+            
             idx = idx + 1;
         end
     end
@@ -69,7 +70,7 @@ for iter = 1:iter_limit
     % Apply precon
     z = applyPrecon(Aplusi, Aplusj, rhs, z, precon, nx, ny);
     
-    sigmaNew = dot(z, rhs);
+    sigmaNew = dot(rhs,z);
     
     % Scaled add
     %         for idx = 1:nx*ny
@@ -79,9 +80,13 @@ for iter = 1:iter_limit
     
     sigma = sigmaNew;
     
+    
+    
 end
 
-maxError = max(norm(rhs))
+fprintf('Exceeded budget of %d iterations, maximum error was %f\n', iter_limit, maxError);
+
+
 
 
 end

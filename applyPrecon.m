@@ -2,11 +2,13 @@ function [ z ] = applyPrecon( Aplusi, Aplusj, rhs, z_in, precon, nx, ny )
 %APPLYPRECON Summary of this function goes here
 %   Detailed explanation goes here
 
+%z = zeros(nx*ny,1);
 z = z_in;
 
 idx = 1;
 for y = 1:ny
     for x = 1:nx
+        %idx = getIdx(x,y,nx);
         t = rhs(idx);
         
         if x > 1

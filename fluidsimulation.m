@@ -4,8 +4,8 @@ g = -9.82; % gravity
 rho = 0.1; % density (1e3 for water, 1.3 for air)
 dt = 1e-2; % time step
 tf = 4; % final time
-nx = 32; % number of x-gridpoints
-ny = 32; % number of y-gridpoints
+nx = 64; % number of x-gridpoints
+ny = 64; % number of y-gridpoints
 %lxy = 1; % size of each grid
 lxy = 1.0/min(nx,ny);
 
@@ -34,7 +34,7 @@ q = zeros(nx*ny,1);
 z = zeros(nx*ny,1);
 
 s = zeros(nx*ny,1); % Search vector (matrix)
-iter_limit = 300;
+iter_limit = 200;
 
 
 %colormap winter
@@ -42,39 +42,41 @@ iter_limit = 300;
 %dxy = lxy;
 dxy = lxy;
 
+time = 0.0;
 
 
-disp('Writing to newfile.avi...')
-video = VideoWriter('newfile.avi','Uncompressed AVI');
-open(video)
+% disp('Writing to newfile.avi...')
+% video = VideoWriter('newfile_test2.avi','Uncompressed AVI');
+% open(video)
 
-
-for outer_t=1:100
+while time < 4.0
     
     
     %umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
     %dt = lxy/umax; % update dt
-    dt = 0.01;
+    dt = 1/30;
     %dxy = 0.5;
     
-    [ d ] = addInFlow( 0.45, 0.8, 0.55, 0.81, nx, ny, 0.5, 0.5, ...
+    
+    
+    [ d ] = addInFlow( 0.45, 0.20, 0.60, 0.23, nx, ny, 0.5, 0.5, ...
         dxy, 1.0, d);
     
-    [ u ] = addInFlow( 0.45, 0.8, 0.55, 0.81, nx+1, ny, 0.0, 0.5, ...
-        dxy, 0.0, u);
-    [ v ] = addInFlow( 0.45, 0.8, 0.55, 0.81, nx, ny, 0.5, 0.0, ...
-        dxy, 150.0, v);
+    [ u ] = addInFlow( 0.45, 0.20, 0.60, 0.23, nx+1, ny, 0.0, 0.5, ...
+        dxy, 20.0, u);
+    [ v ] = addInFlow( 0.45, 0.20, 0.60, 0.23, nx, ny+1, 0.5, 0.0, ...
+        dxy, 0.0, v);
     
     
     
     %% forces
     
-    %     for y = ny/4:ny/2
-    %         for x = nx/4:nx/2
-    %             idx = getIdx(x,y,nx);
-    %             v(idx) = v(idx) + dt*g;
-    %         end
-    %     end
+%         for y = 1:ny+1
+%             for x = 1:nx
+%                 idx = getIdx(x,y,nx);
+%                 v(idx) = v(idx) + dt*g;
+%             end
+%         end
     %
     %
     %     % update u and v
@@ -93,96 +95,84 @@ for outer_t=1:100
             %             idx = getIdx(x,y,nx);
             rhs(idx) = -scale * ((u(getIdx(x+1,y,nx+1)) - u(getIdx(x,y,nx+1))) ...
                 + (v(getIdx(x,y+1,nx)) - v(getIdx(x,y,nx))));
-            assert(isnan(rhs(idx)) == 0)
+%             assert(isnan(rhs(idx)) == 0)
             
             idx = idx + 1;
         end
     end
     
     
-         [ p ] = project2( rhs, nx, ny, dt, rho, dxy, iter_limit);
+%     [ p ] = project2( rhs, nx, ny, dt, rho, dxy, iter_limit);
     
-%     
-%     % Modify RHS for solid velocities (fig. 4.3 in Bridson)
-%     %     for a = 2:nx-1
-%     %         for b = 2:ny-1
-%     %             if a == 2
-%     %                 rhs(a,b) = rhs(a,b) - (scale * u(a,b));
-%     %             end
-%     %             if a == nx-1
-%     %                 rhs(a,b) = rhs(a,b) + (scale * u(a+1,b));
-%     %             end
-%     %             if b == 2
-%     %                 rhs(a,b) = rhs(a,b) - (scale * v(a,b));
-%     %             end
-%     %             if b == ny-1
-%     %                 rhs(a,b) = rhs(a,b) + (scale * v(a,b+1));
-%     %             end
-%     %         end
-%     %     end
-%     
-%     % Set up matrix entities for the pressure equations
-%     scale = dt / (rho * dxy * dxy);
-%     Adiag = zeros(nx*ny, 1); % Coeffcient matrix for pressure equations
-%     %     Aplusi = zeros(nx*ny, 1); %
-%     %     Aplusj = zeros(nx*ny, 1); %
-%     
-%     idx = 1;
-%     for y = 1:ny
-%         for x = 1:nx
-%             if x < nx
-%                 Adiag(idx) = Adiag(idx) + scale;
-%                 Adiag(idx+1) = Adiag(idx+1) + scale;
-%                 Aplusi(idx) = (-scale);
-%             else
-%                 Aplusi(idx) = 0.0;
-%             end
-%             
-%             if y < ny
-%                 Adiag(idx) = Adiag(idx) + scale;
-%                 Adiag(idx + nx) = Adiag(idx + nx) + scale;
-%                 Aplusj(idx) = (-scale);
-%             else
-%                 Aplusj(idx) = 0.0;
-%             end
-%             
-%             %idx = getIdx(x,y,nx);
-%             idx = idx + 1;
-%             
-%         end
-%     end
-%     
-%     % MIC(0) preconditioner
-%     idx = 1;
-%     for y = 1:ny
-%         for x = 1:nx
-%             %             idx = getIdx(x,y,nx);
-%             e = Adiag(idx);
-%             
-%             if x > 1
-%                 px = Aplusi(idx - 1) * precon(idx - 1);
-%                 py = Aplusj(idx - 1) * precon(idx - 1);
-%                 e = e - (px*px + tau_mic*px*py);
-%             end
-%             
-%             if y > 1
-%                 px = Aplusi(idx - nx) * precon(idx - nx);
-%                 py = Aplusj(idx - nx ) * precon(idx - nx);
-%                 e = e - (py*py + tau_mic*px*py);
-%             end
-%             
-%             if e < sigma_mic * Adiag(idx)
-%                 e = Adiag(idx);
-%             end
-%             
-%             precon(idx) = 1/sqrt(e);
-%             
-%             idx = idx + 1;
-%             
-%         end
-%     end
-%     
-%     [p, rhs] = project( Adiag, Aplusi, Aplusj, rhs,  precon, nx, ny, iter_limit );
+    
+    % Set up matrix entities for the pressure equations
+    scale = dt / (rho * dxy * dxy);
+    Adiag = zeros(nx*ny, 1); % Coeffcient matrix for pressure equations
+    %     Aplusi = zeros(nx*ny, 1); %
+    %     Aplusj = zeros(nx*ny, 1); %
+    
+    idx = 1;
+    for y = 1:ny
+        for x = 1:nx
+            if x < nx
+                Adiag(idx) = Adiag(idx) + scale;
+                Adiag(idx+1) = Adiag(idx+1) + scale;
+                Aplusi(idx) = (-scale);
+            else
+                Aplusi(idx) = 0.0;
+            end
+            
+            if y < ny
+                Adiag(idx) = Adiag(idx) + scale;
+                Adiag(idx + nx) = Adiag(idx + nx) + scale;
+                Aplusj(idx) = (-scale);
+            else
+                Aplusj(idx) = 0.0;
+            end
+            
+            %idx = getIdx(x,y,nx);
+            idx = idx + 1;
+            
+        end
+    end
+    
+    % MIC(0) preconditioner
+    idx = 1;
+    for y = 1:ny
+        for x = 1:nx
+            %             idx = getIdx(x,y,nx);
+            e = Adiag(idx);
+            
+            if x > 1
+                px = Aplusi(idx - 1) * precon(idx - 1);
+                py = Aplusj(idx - 1) * precon(idx - 1);
+                e = e - (px*px + tau_mic*px*py);
+            end
+            
+            if y > 1
+                px = Aplusi(idx - nx) * precon(idx - nx);
+                py = Aplusj(idx - nx ) * precon(idx - nx);
+                e = e - (py*py + tau_mic*px*py);
+            end
+            
+            if e < sigma_mic * Adiag(idx)
+                e = Adiag(idx);
+            end
+            
+            precon(idx) = 1/sqrt(e);
+            
+            idx = idx + 1;
+            
+        end
+    end
+    
+    temp_max = max(p);
+    
+    [p, ~] = project( Adiag, Aplusi, Aplusj, rhs,  precon, nx, ny, iter_limit );
+    
+    
+    
+    %assert(max(p) < 1e3, 'p too large')
     
     % Pressure update
     scale = dt/(rho*dxy);
@@ -218,6 +208,8 @@ for outer_t=1:100
     %% advect
     % calc new positions
     
+    
+    
     idx = 1;
     for y = 1:ny
         for x = 1:nx
@@ -227,7 +219,9 @@ for outer_t=1:100
             iy = y + 0.5;
             
             [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
+            %dn(idx) = lerp2(x0, y0, 0.5, 0.5, nx, ny, d);
             dn(idx) = cerp2(x0, y0, nx, ny, 0.5, 0.5, d);
+            
             idx = idx + 1;
         end
     end
@@ -240,8 +234,20 @@ for outer_t=1:100
             ix = x + 0.0;
             iy = y + 0.5;
             
+%             imagesc(reshape(u, [ ny, nx+1]))
+%             drawnow
+%             disp('drawing u')
+%             pause(2)
+            
             [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
+            %un(idx) = lerp2(x0, y0, 0.0, 0.5, nx+1, ny, u);
             un(idx) = cerp2(x0, y0, nx+1, ny, 0.0, 0.5, u);
+            
+%             imagesc(reshape(un, [ ny, nx+1]))
+%             drawnow
+%             disp('drawing un')
+%             pause(0.1)
+            
             idx = idx + 1;
         end
     end
@@ -251,14 +257,16 @@ for outer_t=1:100
         for x = 1:nx
             
             % offset
-            ix = ix + 0.5;
-            iy = iy + 0.0;
+            ix = x + 0.5;
+            iy = y + 0.0;
             
             [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
+            %vn(idx) = lerp2(x0, y0, 0.5, 0.0, nx, ny+1, v);
             vn(idx) = cerp2(x0, y0, nx, ny+1, 0.5, 0.0, v );
             idx = idx+1;
         end
     end
+    
     
     % update u and v
     d = dn;
@@ -268,10 +276,12 @@ for outer_t=1:100
     %imshowpair(u',v');
     
     
-%     u(getIdx(10,10,nx)) = 100;
-%     u(getIdx(10,12,nx)) = 100;
-%     
-%     pause(5)
+    
+    
+    %     u(getIdx(10,10,nx)) = 100;
+    %     u(getIdx(10,12,nx)) = 100;
+    %
+    %     pause(5)
     
     
     
@@ -281,14 +291,19 @@ for outer_t=1:100
     
     %     imagesc(temp_u)
     imagesc(temp_d');
-    F = getframe;
-    writeVideo(video,F)
+%    imshow(uint8(temp_d'*255), 'InitialMagnification', 300);
+%     F = getframe;
+%     writeVideo(video,F)
     
-    %imagesc(reshape(p, [ny, nx]));
+%     imagesc(reshape(p, [ny, nx]));
+    
+    drawnow
+    
+    time = time + dt;
     
     
 end
-close(video)
+% close(video)
 disp('Done!')
 
 
