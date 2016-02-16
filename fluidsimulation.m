@@ -323,15 +323,13 @@ while time < maxtime
     time = time + dt;
     
     perc = time/maxtime;
-    currtime = toc + pasttime;
+    elapsedtime = elapsedtime + (toc + pasttime);
     tic;
-    elapsedtime = elapsedtime + currtime;
     tottime = (1/perc)*elapsedtime;
-    remaintime = tottime - elapsedtime;
-    mins = remaintime/60;
+    mins = (tottime - elapsedtime)/60;
     fmins = floor(mins);
-    sec = floor((mins-fmins)*60);
-    str = sprintf('Estimated remaining time: %i minutes and %i seconds', fmins,sec);
+    secs = floor((mins-fmins)*60);
+    str = sprintf('Estimated remaining time: %i minutes and %i seconds', fmins,secs);
     disp(str)
     pasttime = toc;
     
