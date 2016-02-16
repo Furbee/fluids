@@ -2,8 +2,8 @@ function [ xy ] = cerp2(x, y, w, h, ox, oy, quantity )
 %CERP2 Summary of this function goes here
 %   Detailed explanation goes here
 
-x = min(max(x - ox, 1.0), w - 1.001);
-y = min(max(y - oy, 1.0), h - 1.001);
+x = min(max(x - ox, 1.0), w - 0.001);
+y = min(max(y - oy, 1.0), h - 0.001);
 ix = floor(x);
 iy = floor(y);
 x = x - ix;

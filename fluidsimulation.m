@@ -1,3 +1,5 @@
+clear
+
 %% declaration
 
 g = -9.82; % gravity
@@ -45,12 +47,11 @@ dxy = lxy;
 time = 0.0;
 
 
-% disp('Writing to newfile.avi...')
-% video = VideoWriter('newfile_test2.avi','Uncompressed AVI');
-% open(video)
+%disp('Writing to newfile.avi...')
+%video = VideoWriter('newfile.avi','Uncompressed AVI');
+%open(video)
 
 while time < 4.0
-    
     
     %umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
     %dt = lxy/umax; % update dt
@@ -87,23 +88,41 @@ while time < 4.0
     
     
     % Calculate negative divergence (fig 4.2 in Bridson)
-    scale = 1.0/dxy;
+    scale = 1/dxy;
     
     idx = 1;
     for y = 1:ny
         for x = 1:nx
             %             idx = getIdx(x,y,nx);
             rhs(idx) = -scale * ((u(getIdx(x+1,y,nx+1)) - u(getIdx(x,y,nx+1))) ...
-                + (v(getIdx(x,y+1,nx)) - v(getIdx(x,y,nx))));
-%             assert(isnan(rhs(idx)) == 0)
-            
+                + (v(getIdx(x,y+1,ny)) - v(getIdx(x,y,ny))));
+            assert(isnan(rhs(idx)) == 0)
             idx = idx + 1;
         end
     end
+    %rhs_max = max(abs(rhs))
     
     
-%     [ p ] = project2( rhs, nx, ny, dt, rho, dxy, iter_limit);
+       %  [ p ] = project2( rhs, nx, ny, dt, rho, dxy, iter_limit);
     
+    
+    % Modify RHS for solid velocities (fig. 4.3 in Bridson)
+    %     for a = 2:nx-1
+    %         for b = 2:ny-1
+    %             if a == 2
+    %                 rhs(a,b) = rhs(a,b) - (scale * u(a,b));
+    %             end
+    %             if a == nx-1
+    %                 rhs(a,b) = rhs(a,b) + (scale * u(a+1,b));
+    %             end
+    %             if b == 2
+    %                 rhs(a,b) = rhs(a,b) - (scale * v(a,b));
+    %             end
+    %             if b == ny-1
+    %                 rhs(a,b) = rhs(a,b) + (scale * v(a,b+1));
+    %             end
+    %         end
+    %     end
     
     % Set up matrix entities for the pressure equations
     scale = dt / (rho * dxy * dxy);
@@ -135,6 +154,9 @@ while time < 4.0
             
         end
     end
+    %Adiag_max = max(abs(Adiag))
+    %Aplusi_max = max(abs(Aplusi))
+    %Aplusj_max = max(abs(Aplusj))
     
     % MIC(0) preconditioner
     idx = 1;
@@ -166,14 +188,11 @@ while time < 4.0
         end
     end
     
-    temp_max = max(p);
+    %precon_max = max(abs(precon))
     
-    [p, ~] = project( Adiag, Aplusi, Aplusj, rhs,  precon, nx, ny, iter_limit );
-    
-    
-    
-    %assert(max(p) < 1e3, 'p too large')
-    
+    [p, rhs] = project( Adiag, Aplusi, Aplusj, rhs,  precon, nx, ny, iter_limit );
+    %p_max = max(abs(p))
+
     % Pressure update
     scale = dt/(rho*dxy);
     idx = 1;
@@ -188,19 +207,21 @@ while time < 4.0
             idx = idx + 1;
         end
     end
-    
+
+    %u_max = max(abs(u))
+    %v_max = max(abs(v))
     % Boundaries, x
     for y = 1:ny
         idx = getIdx(1,y,nx+1);
         u(idx) =  0.0;
-        idx = getIdx(nx,y,nx+1);
+        idx = getIdx(nx+1,y,nx+1);
         u(idx) = 0.0;
     end
     
     for x = 1:nx
         idx = getIdx(x,1,nx);
         v(idx) = 0.0;
-        idx = getIdx(x,ny,nx);
+        idx = getIdx(x,ny+1,nx);
         v(idx) = 0.0;
     end
     
@@ -226,6 +247,7 @@ while time < 4.0
         end
     end
     
+    
     idx = 1;
     for y = 1:ny
         for x = 1:nx+1
@@ -234,20 +256,9 @@ while time < 4.0
             ix = x + 0.0;
             iy = y + 0.5;
             
-%             imagesc(reshape(u, [ ny, nx+1]))
-%             drawnow
-%             disp('drawing u')
-%             pause(2)
-            
             [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
             %un(idx) = lerp2(x0, y0, 0.0, 0.5, nx+1, ny, u);
             un(idx) = cerp2(x0, y0, nx+1, ny, 0.0, 0.5, u);
-            
-%             imagesc(reshape(un, [ ny, nx+1]))
-%             drawnow
-%             disp('drawing un')
-%             pause(0.1)
-            
             idx = idx + 1;
         end
     end
@@ -273,6 +284,9 @@ while time < 4.0
     u = un;
     v = vn;
     
+    %u_max = max(abs(u))
+    %v_max = max(abs(v))
+    
     %imshowpair(u',v');
     
     
@@ -289,11 +303,11 @@ while time < 4.0
     temp_u = reshape(u, [ny+1, nx]);
     temp_v = reshape(v, [ny, nx+1]);
     
-    %     imagesc(temp_u)
+    %imagesc(temp_u)
     imagesc(temp_d');
-%    imshow(uint8(temp_d'*255), 'InitialMagnification', 300);
-%     F = getframe;
-%     writeVideo(video,F)
+    drawnow
+    %F = getframe;
+    %writeVideo(video,F)
     
 %     imagesc(reshape(p, [ny, nx]));
     
@@ -303,7 +317,7 @@ while time < 4.0
     
     
 end
-% close(video)
+%close(video)
 disp('Done!')
 
 
