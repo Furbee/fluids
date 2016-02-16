@@ -3,7 +3,7 @@ clear
 %% declaration
 
 g = -9.82; % gravity
-rho = 0.1; % density (1e3 for water, 1.3 for air)
+rho = 1e3; % density (1e3 for water, 1.3 for air)
 dt = 1e-2; % time step
 tf = 4; % final time
 nx = 64; % number of x-gridpoints
@@ -47,15 +47,16 @@ dxy = lxy;
 time = 0.0;
 
 
-%disp('Writing to newfile.avi...')
-%video = VideoWriter('newfile.avi','Uncompressed AVI');
-%open(video)
+disp('Writing to newfile.avi...')
+video = VideoWriter('newfile.avi','Uncompressed AVI');
+open(video)
 
-while time < 4.0
+while time < 10.0
     
-    %umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
-    %dt = lxy/umax; % update dt
-    dt = 1/30;
+    %disp('NEW LOOP')
+    umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
+    dt = lxy/umax; % update dt
+    %dt = 1/30;
     %dxy = 0.5;
     
     
@@ -214,15 +215,19 @@ while time < 4.0
     for y = 1:ny
         idx = getIdx(1,y,nx+1);
         u(idx) =  0.0;
-        idx = getIdx(nx+1,y,nx+1);
+        u(idx+1) = 0.0;
+        idx = getIdx(nx,y,nx+1);
         u(idx) = 0.0;
+        u(idx+1) = 0.0;
     end
     
     for x = 1:nx
         idx = getIdx(x,1,nx);
         v(idx) = 0.0;
-        idx = getIdx(x,ny+1,nx);
+        v(idx+1) = 0.0;
+        idx = getIdx(x,ny,nx);
         v(idx) = 0.0;
+        v(idx+nx) = 0.0;
     end
     
     
@@ -257,6 +262,7 @@ while time < 4.0
             iy = y + 0.5;
             
             [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
+
             %un(idx) = lerp2(x0, y0, 0.0, 0.5, nx+1, ny, u);
             un(idx) = cerp2(x0, y0, nx+1, ny, 0.0, 0.5, u);
             idx = idx + 1;
@@ -295,7 +301,7 @@ while time < 4.0
     %     u(getIdx(10,10,nx)) = 100;
     %     u(getIdx(10,12,nx)) = 100;
     %
-    %     pause(5)
+    %     pause(2)
     
     
     
@@ -305,19 +311,17 @@ while time < 4.0
     
     %imagesc(temp_u)
     imagesc(temp_d');
-    drawnow
-    %F = getframe;
-    %writeVideo(video,F)
+    F = getframe;
+    writeVideo(video,F)
     
 %     imagesc(reshape(p, [ny, nx]));
     
-    drawnow
     
     time = time + dt;
     
     
 end
-%close(video)
+close(video)
 disp('Done!')
 
 
