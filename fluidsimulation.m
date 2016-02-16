@@ -10,6 +10,10 @@ nx = 64; % number of x-gridpoints
 ny = 64; % number of y-gridpoints
 %lxy = 1; % size of each grid
 lxy = 1.0/min(nx,ny);
+maxtime = 5.0; % set simulation length
+elapsedtime = 0.0;
+time = 0.0;
+pasttime = 0.0;
 
 %% create grid
 
@@ -44,15 +48,14 @@ iter_limit = 200;
 %dxy = lxy;
 dxy = lxy;
 
-time = 0.0;
 
 
 disp('Writing to newfile.avi...')
 video = VideoWriter('newfile.avi','Uncompressed AVI');
 open(video)
 
-while time < 10.0
-    
+while time < maxtime
+    tic;
     %disp('NEW LOOP')
     umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
     dt = lxy/umax; % update dt
@@ -61,13 +64,13 @@ while time < 10.0
     
     
     
-    [ d ] = addInFlow( 0.45, 0.20, 0.60, 0.23, nx, ny, 0.5, 0.5, ...
+    [ d ] = addInFlow( 0.45, 0.80, 0.60, 0.83, nx, ny, 0.5, 0.5, ...
         dxy, 1.0, d);
     
-    [ u ] = addInFlow( 0.45, 0.20, 0.60, 0.23, nx+1, ny, 0.0, 0.5, ...
-        dxy, 20.0, u);
-    [ v ] = addInFlow( 0.45, 0.20, 0.60, 0.23, nx, ny+1, 0.5, 0.0, ...
-        dxy, 0.0, v);
+    [ u ] = addInFlow( 0.45, 0.80, 0.60, 0.83, nx+1, ny, 0.0, 0.5, ...
+        dxy, 0.0, u);
+    [ v ] = addInFlow( 0.45, 0.80, 0.60, 0.83, nx, ny+1, 0.5, 0.0, ...
+        dxy, -10.0, v);
     
     
     
@@ -312,13 +315,25 @@ while time < 10.0
     %imagesc(temp_u)
     imagesc(temp_d');
     F = getframe;
-    writeVideo(video,F)
+    writeVideo(video,F);
     
 %     imagesc(reshape(p, [ny, nx]));
     
     
     time = time + dt;
     
+    perc = time/maxtime;
+    currtime = toc + pasttime;
+    tic;
+    elapsedtime = elapsedtime + currtime;
+    tottime = (1/perc)*elapsedtime;
+    remaintime = tottime - elapsedtime;
+    mins = remaintime/60;
+    fmins = floor(mins);
+    sec = floor((mins-fmins)*60);
+    str = sprintf('Estimated remaining time: %i minutes and %i seconds', fmins,sec);
+    disp(str)
+    pasttime = toc;
     
 end
 close(video)
