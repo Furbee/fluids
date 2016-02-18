@@ -2,15 +2,21 @@ clear
 
 %% declaration
 
-g = -9.82; % gravity
-rho = 1e3; % density (1e3 for water, 1.3 for air)
+g = 9.82; % gravity
+rho = 0.1; % density (1e3 for water, 1.3 for air)
+densitySoot = 0.15;
+densityAir = rho;
+tAmb = 273;
+
+
+
 dt = 1e-2; % time step
 tf = 4; % final time
-nx = 64; % number of x-gridpoints
-ny = 64; % number of y-gridpoints
+nx = 32; % number of x-gridpoints
+ny = 32; % number of y-gridpoints
 %lxy = 1; % size of each grid
 lxy = 1.0/min(nx,ny);
-maxtime = 5.0; % set simulation length
+maxtime = 10.0; % set simulation length
 elapsedtime = 0.0;
 time = 0.0;
 pasttime = 0.0;
@@ -18,8 +24,10 @@ pasttime = 0.0;
 %% create grid
 
 p = zeros(nx*ny, 1); % pressure at each grid
-d = zeros(nx*ny, 1);
+d = zeros(nx*ny, 1); % soot concentration
 dn = zeros(nx*ny, 1);
+T = zeros(nx*ny, 1); % temperature
+Tn = zeros(nx*ny, 1);
 u = zeros((nx+1)*ny, 1); % speed in x-direction
 v = zeros(nx*(ny+1), 1); % speed in y-direction
 pn = zeros(nx*ny, 1); % next pressure at each grid
@@ -40,7 +48,7 @@ q = zeros(nx*ny,1);
 z = zeros(nx*ny,1);
 
 s = zeros(nx*ny,1); % Search vector (matrix)
-iter_limit = 200;
+iter_limit = 600;
 
 
 %colormap winter
@@ -67,14 +75,17 @@ while time < maxtime
     [ d ] = addInFlow( 0.45, 0.80, 0.60, 0.83, nx, ny, 0.5, 0.5, ...
         dxy, 1.0, d);
     
+    [ T ] = addInFlow( 0.45, 0.80, 0.60, 0.83, nx, ny, 0.5, 0.5, ...
+        dxy, tAmb + 300.0, T);
+    
     [ u ] = addInFlow( 0.45, 0.80, 0.60, 0.83, nx+1, ny, 0.0, 0.5, ...
         dxy, 0.0, u);
     [ v ] = addInFlow( 0.45, 0.80, 0.60, 0.83, nx, ny+1, 0.5, 0.0, ...
-        dxy, -10.0, v);
+        dxy, 0.0, v);
     
     
     
-    %% forces
+    %% external forces
     
 %         for y = 1:ny+1
 %             for x = 1:nx
@@ -82,10 +93,35 @@ while time < maxtime
 %                 v(idx) = v(idx) + dt*g;
 %             end
 %         end
-    %
-    %
-    %     % update u and v
-    %     v = vn;
+
+    % buoyancy
+    
+    alpha = (densitySoot - densityAir)/densityAir;
+    
+    idx = 1;
+    for y = 1:ny
+        for x = 1:nx
+            
+            buoyancy = dt * g * (alpha*d(idx)- (T(idx) - tAmb)/tAmb);
+            
+            v(idx) = v(idx) + buoyancy*0.5;
+            v(idx+nx) = v(idx+nx) + buoyancy*0.5;
+            
+            idx = idx + 1;
+            
+        end
+    end
+    
+    
+    for x = 1:nx
+        idx = getIdx(x,1,nx);
+        v(idx) = 0.0;
+        v(idx+1) = 0.0;
+        idx = getIdx(x,ny,nx);
+        v(idx) = 0.0;
+        v(idx+nx) = 0.0;
+    end
+    
     
     
     %% project
@@ -250,6 +286,7 @@ while time < maxtime
             [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
             %dn(idx) = lerp2(x0, y0, 0.5, 0.5, nx, ny, d);
             dn(idx) = cerp2(x0, y0, nx, ny, 0.5, 0.5, d);
+            Tn(idx) = cerp2(x0, y0, nx, ny, 0.5, 0.5, T);
             
             idx = idx + 1;
         end
@@ -290,6 +327,7 @@ while time < maxtime
     
     % update u and v
     d = dn;
+    T = Tn;
     u = un;
     v = vn;
     
@@ -314,6 +352,8 @@ while time < maxtime
     
     %imagesc(temp_u)
     imagesc(temp_d');
+    
+    drawnow
     F = getframe;
     writeVideo(video,F);
     
