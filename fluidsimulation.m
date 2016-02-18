@@ -10,13 +10,16 @@ tAmb = 273;
 kDiss = 0.1;
 
 
+colormap(gray);
+
+
 dt = 1e-2; % time step
 tf = 4; % final time
 nx = 64; % number of x-gridpoints
 ny = 64; % number of y-gridpoints
 %lxy = 1; % size of each grid
 lxy = 1.0/min(nx,ny);
-maxtime = 10.0; % set simulation length
+maxtime = 3.0; % set simulation length
 elapsedtime = 0.0;
 time = 0.0;
 pasttime = 0.0;
@@ -65,9 +68,11 @@ open(video)
 while time < maxtime
     tic;
     %disp('NEW LOOP')
-    %umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
-    %dt = lxy/umax; % update dt
-    dt = 1/60;
+
+    umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
+    dt = lxy/umax; % update dt
+    %dt = 1/60;
+
     %dxy = 0.5;
     
     
@@ -267,6 +272,20 @@ while time < maxtime
         idx = getIdx(x,ny,nx);
         v(idx) = 0.0;
         v(idx+nx) = 0.0;
+    end
+    
+    for y = 1:ny
+        idx = getIdx(1,y,nx);
+        T(idx) = tAmb;
+        idx = getIdx(nx,y,nx);
+        T(idx) = tAmb;
+    end
+    
+    for x = 1:nx
+        idx = getIdx(x,1,nx);
+        T(idx) = tAmb;
+        idx = getIdx(x,ny,nx);
+        T(idx) = tAmb;
     end
     
     
