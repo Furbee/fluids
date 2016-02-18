@@ -4,16 +4,16 @@ clear
 
 g = 9.82; % gravity
 rho = 0.1; % density (1e3 for water, 1.3 for air)
-densitySoot = 0.15;
+densitySoot = 0.11;
 densityAir = rho;
 tAmb = 273;
-
+kDiss = 0.1;
 
 
 dt = 1e-2; % time step
 tf = 4; % final time
-nx = 32; % number of x-gridpoints
-ny = 32; % number of y-gridpoints
+nx = 64; % number of x-gridpoints
+ny = 64; % number of y-gridpoints
 %lxy = 1; % size of each grid
 lxy = 1.0/min(nx,ny);
 maxtime = 10.0; % set simulation length
@@ -65,9 +65,9 @@ open(video)
 while time < maxtime
     tic;
     %disp('NEW LOOP')
-    umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
-    dt = lxy/umax; % update dt
-    %dt = 1/30;
+    %umax = max(max(max(u)),max(max(v+sqrt(5*lxy*abs(g))))); % update max speed
+    %dt = lxy/umax; % update dt
+    dt = 1/60;
     %dxy = 0.5;
     
     
@@ -286,6 +286,9 @@ while time < maxtime
             [x0, y0] = rungeKutta3( ix, iy, dt, u, v, dxy, nx, ny);
             %dn(idx) = lerp2(x0, y0, 0.5, 0.5, nx, ny, d);
             dn(idx) = cerp2(x0, y0, nx, ny, 0.5, 0.5, d);
+            
+            dn(idx) = max(0, dn(idx) - kDiss*dt);
+            
             Tn(idx) = cerp2(x0, y0, nx, ny, 0.5, 0.5, T);
             
             idx = idx + 1;
@@ -351,6 +354,7 @@ while time < maxtime
     temp_v = reshape(v, [ny, nx+1]);
     
     %imagesc(temp_u)
+    colormap gray
     imagesc(temp_d');
     
     drawnow
