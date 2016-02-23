@@ -77,4 +77,9 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties fabric.properties
 
-
+# Other
+.idea/.name
+.idea/encodings.xml
+.idea/fluid-simulation.iml
+.idea/misc.xml
+.idea/modules.xml
