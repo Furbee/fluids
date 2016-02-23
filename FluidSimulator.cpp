@@ -25,6 +25,18 @@ void FluidSimulator::addInFlow(int x0, int y0, int x1, int y1, int w, int h, int
 
 void FluidSimulator::update(double dt) {
 
+    //double umax = std::max(std::max(std::max(_u)),std::max(std::max(_v+sqrt(5*_dxy*abs(_gravity)))));
+    //_dt = _dxy/umax;
+
+    applyBuoyancy();
+    buildRhs();
+    buildPressureMatrix();
+    buildPrecon();
+    project();
+    applyPressure();
+    advect();
+
+
 }
 
 void FluidSimulator::applyPressure() {
