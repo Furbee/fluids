@@ -45,6 +45,7 @@ private:
     std::vector<double> _rhs;
     std::vector<double> _pressure;
     std::vector<double> _u;
+    std::vector<double> _z;
     std::vector<double> _un;
     std::vector<double> _v;
     std::vector<double> _vn;
@@ -96,6 +97,8 @@ private:
     void buildRhs();
 
     void buildPrecon();
+
+    void applyPrecon();
 
     void applyPressure();
 
