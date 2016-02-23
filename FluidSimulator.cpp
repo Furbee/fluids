@@ -31,16 +31,16 @@ void FluidSimulator::applyPressure() {
 
     // Apply pressure
 
-    double scale = _dt/(_rho*_dxy);
+    double scale = _dt / (_rho * _dxy);
     int uvidx = 0;
     int idx = 0;
 
     for (int y = 0; y < _ny; ++y) {
         for (int x = 0; x < _nx; ++x) {
-            uvidx = getIdx(x,y,_nx+1);
+            uvidx = getIdx(x, y, _nx + 1);
             _u[uvidx] = _u[uvidx] - scale * _u[idx];
-            _u[uvidx+1] = _u[uvidx+1] + scale * _u[idx];
-            uvidx = getIdx(x,y,_nx);
+            _u[uvidx + 1] = _u[uvidx + 1] + scale * _u[idx];
+            uvidx = getIdx(x, y, _nx);
             _v[uvidx] = _v[uvidx] - scale * _u[idx];
             _v[uvidx + _nx] = _v[uvidx + _nx] + scale * _u[idx];
             idx = idx++;
@@ -49,39 +49,41 @@ void FluidSimulator::applyPressure() {
 
     // Update boundaries
 
-    for (int y=0; y < _ny; ++y) {
-        idx = getIdx(1,y,_nx+1);
-        _u[idx] =  0.0;
-        _u[idx+1] = 0.0;
-        idx = getIdx(_nx,y,_nx+1);
+    for (int y = 0; y < _ny; ++y) {
+        idx = getIdx(1, y, _nx + 1);
         _u[idx] = 0.0;
-        _u[idx+1] = 0.0;
+        _u[idx + 1] = 0.0;
+        idx = getIdx(_nx, y, _nx + 1);
+        _u[idx] = 0.0;
+        _u[idx + 1] = 0.0;
     }
 
 
     for (int x = 0; x < _nx; ++x) {
-        idx = getIdx(x,1,_nx);
+        idx = getIdx(x, 1, _nx);
         _v[idx] = 0.0;
-        _v[idx+1] = 0.0;
-        idx = getIdx(x,_ny,_nx);
+        _v[idx + 1] = 0.0;
+        idx = getIdx(x, _ny, _nx);
         _v[idx] = 0.0;
-        _v[idx+_nx] = 0.0;
+        _v[idx + _nx] = 0.0;
     }
 
 
     for (int y = 0; y < _ny; ++y) {
-        idx = getIdx(1,y,_nx);
+        idx = getIdx(1, y, _nx);
         _T[idx] = tAmb;
-        idx = getIdx(_nx,y,_nx);
+        idx = getIdx(_nx, y, _nx);
         _T[idx] = tAmb;
     }
 
 
     for (int x = 0; x < _nx; ++x) {
-        idx = getIdx(x,1,_nx);
+        idx = getIdx(x, 1, _nx);
         _T[idx] = tAmb;
-        idx = getIdx(x,_ny,_nx);
+        idx = getIdx(x, _ny, _nx);
         _T[idx] = tAmb;
+    }
+}
 
 void FluidSimulator::buildRhs() {
 
