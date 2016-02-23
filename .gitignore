@@ -2,7 +2,7 @@
 *.asv
 *.avi
 
-/external/glew/
+external/glew/
 
 ### C++ template
 # Compiled Object files
