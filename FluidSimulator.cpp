@@ -156,9 +156,7 @@ void FluidSimulator::applyPrecon() {
             }
 
             _z[idx] = t * _precon[idx];
-
-            idx = idx + 1;
-
+            
         }
     }
 
