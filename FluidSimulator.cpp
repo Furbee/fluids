@@ -31,7 +31,7 @@ void FluidSimulator::applyPressure() {
 
     // Apply pressure
 
-    double scale = _dt / (_rho * _dxy);
+    double scale = _dt / (_RHO * _dxy);
     int uvidx = 0;
     int idx = 0;
 
@@ -71,17 +71,17 @@ void FluidSimulator::applyPressure() {
 
     for (int y = 0; y < _ny; ++y) {
         idx = getIdx(1, y, _nx);
-        _T[idx] = tAmb;
+        _T[idx] = TAMB;
         idx = getIdx(_nx, y, _nx);
-        _T[idx] = tAmb;
+        _T[idx] = TAMB;
     }
 
 
     for (int x = 0; x < _nx; ++x) {
         idx = getIdx(x, 1, _nx);
-        _T[idx] = tAmb;
+        _T[idx] = TAMB;
         idx = getIdx(x, _ny, _nx);
-        _T[idx] = tAmb;
+        _T[idx] = TAMB;
     }
 }
 
