@@ -74,12 +74,12 @@ void FluidSimulator::buildPrecon() {
 void FluidSimulator::applyBuoyancy() {
 
 
-    double alpha = (_densitySoot - _densityAir)/_densityAir;
+    double alpha = (_DENSITYSOOT - _DENSITYAIR)/_DENSITYAIR;
 
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++) {
 
-            double buoyancy = _dt * _gravity * (alpha * _d[idx] - (_T(idx) - tAmb) / tAmb);
+            double buoyancy = _dt * _GRAVITY * (alpha * _d[idx] - (_T(idx) - TAMB) / TAMB);
             _v[idx] += buoyancy * 0.5;
             _v[idx + _nx] += buoyancy * 0.5;
 
@@ -87,4 +87,74 @@ void FluidSimulator::applyBuoyancy() {
     }
 
 
+}
+
+void FluidSimulator::advect() {
+
+    int idx = 0;
+    double ix, iy;
+    struct Point x0y0;
+
+    for( int y = 0 ; y < _ny ; y++ ){
+        for( int x = 0 ; y < _nx ; x++ ){
+
+            //offset
+            ix = x + 0.5;
+            iy = y + 0.5;
+
+            x0y0 = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+             // = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+
+            _dn[idx] = cerp2( x0y0.x, x0y0.y, _nx, _ny, 0.5, 0.5, _d  );
+
+            _dn[idx] = std::max(0, _dn[idx] * exp( -KDISS * _dt) );
+
+            _Tn[idx] = cerp2( x0y0.x, x0y0.y, _nx, _ny, 0.5, 0.5, _T );
+
+            idx++;
+
+        }
+
+    }
+
+    idx = 0;
+
+    for( int y = 0; y < _ny ; y++ ){
+        for(int x = 0 ; x <= _nx ; x++){
+
+            //offset
+            ix = x + 0.5;
+            iy = y + 0.5;
+
+            x0y0.x = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+            x0y0.y = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+
+            _un[idx] = cerp2( x0y0.x, x0y0.y, (_nx + 1), _ny, 0.0, 0.5, _u );
+            idx++
+
+        }
+
+    }
+
+    idx = 0;
+    for( int y = 0 ; y <= _ny ; y++ ){
+        for( int x = 0 ; x < _nx ; x++ ) {
+
+            //offset
+            ix = x + 0.5;
+            iy = y + 0.5;
+
+            x0y0.x = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+            x0y0.y = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+
+            _vn[idx] = cerp2( x0y0.x, x0y0.y, _nx, (_ny+1), 0.5, 0.0, _v);
+            idx++;
+        }
+
+    }
+    //update u & v
+    _d = _dn;
+    _T = _Tn;
+    _u = _un;
+    _v = _vn;
 }

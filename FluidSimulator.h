@@ -23,7 +23,7 @@ private:
     const double _GRAVITY = 9.82; // gravity
     const double _RHO = 0.1; // density (1e3 for water, 1.3 for air)
     const double _DENSITYSOOT= 0.11;
-    const double DENSITYAIR = 0.1;
+    const double _DENSITYAIR = 0.1;
     const double TAMB = 273;
     const double KDISS = 0.1;
 
@@ -55,6 +55,11 @@ private:
     std::vector<double> _dn;
     std::vector<double> _T;
     std::vector<double> _Tn;
+
+    //struct arrays for x,y,z
+    struct Point{
+        double x,  y, z;
+    };
 
 
 
