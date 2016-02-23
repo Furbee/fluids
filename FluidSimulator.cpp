@@ -186,3 +186,20 @@ double FluidSimulator::lerp(double a, double b, double x) {
 
     return xy;
 }
+
+double FluidSimulator::cerp(double a, double b, double c, double d, double x) {
+
+    double xsq = x*x;
+    double xcu = xsq*x;
+    double minV = std::min(a, std::min(b, std::min(c, d)));
+    double maxV = std::max(a, std::max(b, std::max(c, d)));
+
+    double t =
+    a*(0.0 - 0.5*x + 1.0*xsq - 0.5*xcu) +
+    b*(1.0 + 0.0*x - 2.5*xsq + 1.5*xcu) +
+    c*(0.0 + 0.5*x + 2.0*xsq - 1.5*xcu) +
+    d*(0.0 + 0.0*x - 0.5*xsq + 0.5*xcu);
+
+    return std::min(std::max(t, minV), maxV);
+
+}
