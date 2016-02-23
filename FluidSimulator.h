@@ -20,13 +20,13 @@ private:
 
     // Constants
 
-    double _gravity = 9.82; // gravity
-    double _rho = 0.1; // density (1e3 for water, 1.3 for air)
-    double _densitySoot = 0.11;
-    double _densityAir = 0.1;
-    double tAmb = 273;
-    double kDiss = 0.1;
-    int _iterLimit;
+    const double _GRAVITY = 9.82; // gravity
+    const double _RHO = 0.1; // density (1e3 for water, 1.3 for air)
+    const double _DENSITYSOOT= 0.11;
+    const double _DENSITYAIR = 0.1;
+    const double TAMB = 273;
+    const double KDISS = 0.1;
+    const int _ITERLIMIT;
 
 
     // Member variables
@@ -46,6 +46,7 @@ private:
     std::vector<double> _rhs;
     std::vector<double> _pressure;
     std::vector<double> _u;
+    std::vector<double> _z;
     std::vector<double> _un;
     std::vector<double> _v;
     std::vector<double> _vn;
@@ -56,6 +57,11 @@ private:
     std::vector<double> _dn;
     std::vector<double> _T;
     std::vector<double> _Tn;
+
+    //struct arrays for x,y,z
+    struct Point{
+        double x,  y, z;
+    };
 
 
 
@@ -78,6 +84,10 @@ private:
     double lerp3(int x, int y, int z, float ox, float oy, float oz, int w, int h,
                  std::unique_ptr<std::vector<double>> quantity );
 
+    double cerp( double a, double b, double c, double d, double x );
+
+    double cerp2(double x, double y, int w, int h, double ox, double oy, std::vector<double> &quantity);
+
 
     void addInFlow( int x0, int y0, int x1, int y1, int w, int h, int ox, int oy, double dxy, double value,
                     std::unique_ptr<std::vector<double>> src);
@@ -89,13 +99,14 @@ private:
 
     void buildPrecon();
 
+    void applyPrecon();
+
     void applyPressure();
 
     void advect();
 
     void buildPressureMatrix();
 
-    void applyPrecon();
 
 
     void update(double dt);
@@ -107,6 +118,6 @@ private:
 
 
 
-    };
+};
 
 
