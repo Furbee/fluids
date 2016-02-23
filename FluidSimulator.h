@@ -26,6 +26,7 @@ private:
     double _densityAir = 0.1;
     double tAmb = 273;
     double kDiss = 0.1;
+    int _iterLimit;
 
 
     // Member variables
@@ -92,7 +93,9 @@ private:
 
     void advect();
 
+    void buildPressureMatrix();
 
+    void applyPrecon();
 
 
     void update(double dt);
@@ -100,10 +103,10 @@ private:
 
     void project();
 
+    void scaleAdd(std::vector<double> &curr, std::vector<double> &a, std::vector<double> &b, double s);
 
 
 
-
-};
+    };
 
 
