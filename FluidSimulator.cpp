@@ -41,3 +41,32 @@ void FluidSimulator::buildRhs() {
     }
 
 }
+
+void FluidSimulator::buildPrecon() {
+
+    for (int y = 0, idx = 0; y < _ny; y++) {
+        for (int x = 0; x < _nx; x++, idx++) {
+
+            double e = _Adiag[idx];
+
+            if (x > 0) {
+                double px = _Aplusi[idx - 1]*_precon[idx - 1];
+                double py = _Aplusj[idx - 1]*_precon[idx - 1];
+
+                e = e - (px*px + _tau_mic*px*py);
+            }
+            if (y > 0) {
+                double px = _Aplusi[idx - _nx]*_precon[idx - _nx];
+                double py = _Aplusj[idx - _nx]*_precon[idx - _nx];
+                e = e - (py*py + _tau_mic*px*py);
+            }
+
+            if (e < _sigma_mic*_Adiag[idx])
+                e = _Adiag[idx];
+
+            _precon[idx] = 1.0/sqrt(e);
+
+        }
+    }
+
+}
