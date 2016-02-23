@@ -147,3 +147,10 @@ void FluidSimulator::applyBuoyancy() {
 
 
 }
+
+double FluidSimulator::lerp(double a, double b, double x) {
+
+    double xy = a*(1.0 - x) + b*x;
+
+    return xy;
+}
