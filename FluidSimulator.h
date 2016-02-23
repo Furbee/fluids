@@ -77,6 +77,8 @@ private:
     double lerp3(int x, int y, int z, float ox, float oy, float oz, int w, int h,
                  std::unique_ptr<std::vector<double>> quantity );
 
+    double cerp2(double x, double y, int w, int h, double ox, double oy, std::vector<double> &quantity);
+
 
     void addInFlow( int x0, int y0, int x1, int y1, int w, int h, int ox, int oy, double dxy, double value,
                     std::unique_ptr<std::vector<double>> src);

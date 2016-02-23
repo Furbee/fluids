@@ -147,3 +147,35 @@ void FluidSimulator::applyBuoyancy() {
 
 
 }
+
+double FluidSimulator::cerp2(double x, double y, int w, int h, double ox, double oy, std::vector<double> &quantity) {
+
+    x = std::min(std::max(x - ox, 0.0), w - 1.001);
+    y = std::min(std::max(y - oy, 0.0), h - 1.001);
+    int ix = static_cast<int>(x);
+    int iy = static_cast<int>(y);
+    x = x - ix;
+    y = y - iy;
+
+    int x0 = std::max(ix - 1, 0);
+    int x1 = ix;
+    int x2 = ix + 1;
+    int x3 = std::min(ix + 2, w - 1);
+
+    int y0 = std::max(iy - 1, 0);
+    int y1 = iy;
+    int y2 = iy + 1;
+    int y3 = std::min(iy + 2, h - 1);
+
+    double q0 = cerp(quantity[getIdx(x0, y0, w)], quantity[getIdx(x1, y0, w)],
+    quantity[getIdx(x2, y0, w)], quantity[getIdx(x3, y0, w)], x);
+    double q1 = cerp(quantity[getIdx(x0, y1, w)], quantity[getIdx(x1, y1, w)],
+    quantity[getIdx(x2, y1, w)], quantity[getIdx(x3, y1, w)], x);
+    double q2 = cerp(quantity[getIdx(x0, y2, w)], quantity[getIdx(x1, y2, w)],
+    quantity[getIdx(x2, y2, w)], quantity[getIdx(x3, y2, w)], x);
+    double q3 = cerp(quantity[getIdx(x0, y3, w)], quantity[getIdx(x1, y3, w)],
+    quantity[getIdx(x2, y3, w)], quantity[getIdx(x3, y3, w)], x);
+
+    return cerp(q0, q1, q2, q3, y);
+
+}
