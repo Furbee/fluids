@@ -18,9 +18,6 @@ FluidSimulator::FluidSimulator() {
 
 void FluidSimulator::project() {
 
-    std::vector<double> p;
-    std::vector<double> z;
-    std::vector<double> s;
     double t;
 
 
@@ -29,14 +26,14 @@ void FluidSimulator::project() {
 
     applyPrecon();
 
-    s = z;
+    _s = _z;
 
     double maxError = *std::max_element(_rhs.begin(), _rhs.end(), absCompare);
 
     if (maxError < 1e-5)
         return;
 
-    double sigma = *glm::dot(_rhs.data(),z.data());
+    double sigma = *glm::dot(_rhs.data(),_z.data());
 
 // Iterative solver
 
@@ -44,30 +41,28 @@ void FluidSimulator::project() {
 
 // Matrix vector product
 
-        int idx = 1;
-        for (int y = 0; y < _ny; ++y) {
-            for (int x = 0; x < _nx; ++x) {
-                t = _Adiag[idx] * s[idx];
-                if (x < 1)
-                    t = t + _Aplusi[idx - 1] * s[idx - 1];
-                else if (y > 1)
-                    t = t + _Aplusj[idx - _nx] * s[idx - _nx];
-                else if (x < _nx)
-                    t = t + _Aplusi[idx] * s[idx + 1];
-                else if (y < _ny)
-                    t = t + _Aplusj[idx] * s[idx + _nx];
+        for (int y = 0, idx = 0; y < _ny; y++) {
+            for (int x = 0; x < _nx; x++, idx++) {
+                t = _Adiag[idx] * _s[idx];
+                if (x > 0)
+                    t = t + _Aplusi[idx - 1] * _s[idx - 1];
+                else if (y > 0)
+                    t = t + _Aplusj[idx - _nx] * _s[idx - _nx];
+                else if (x < _nx - 1)
+                    t = t + _Aplusi[idx] * _s[idx + 1];
+                else if (y < _ny - 1)
+                    t = t + _Aplusj[idx] * _s[idx + _nx];
 
-                z[idx] = t;
-                idx++;
+                _z[idx] = t;
             }
         }
 
-        double alpha = sigma / *glm::dot(z.data(),s.data());
+        double alpha = sigma / *glm::dot(_z.data(),_s.data());
 
 //  Scaled add
 
-        scaleAdd(p,p,s,alpha);
-        scaleAdd(_rhs,_rhs,z,-alpha);
+        scaleAdd(_pressure,_pressure,_s,alpha);
+        scaleAdd(_rhs,_rhs,_z,-alpha);
 
         double maxError = *std::max_element(_rhs.begin(), _rhs.end(), absCompare);
 
@@ -80,9 +75,9 @@ void FluidSimulator::project() {
 
         applyPrecon;
 
-        double sigmaNew = *glm::dot(_rhs.data(),z.data());
+        double sigmaNew = *glm::dot(_rhs.data(),_z.data());
 
-        scaleAdd(s, z, s, sigmaNew/sigma)
+        scaleAdd(_s, _z, _s, sigmaNew/sigma)
         sigma = sigmaNew;
 
         std::cout << "Exceeded budget of " << _ITERLIMIT << " iterations, maximum error was " << maxError << std::endl;
@@ -118,23 +113,21 @@ void FluidSimulator::applyPressure() {
 
     double scale = _dt / (_RHO * _dxy);
     int uvidx = 0;
-    int idx = 0;
 
-    for (int y = 0; y < _ny; ++y) {
-        for (int x = 0; x < _nx; ++x) {
+    for (int y = 0, idx = 0; y < _ny; y++) {
+        for (int x = 0; x < _nx; x++, idx++) {
             uvidx = getIdx(x, y, _nx + 1);
             _u[uvidx] = _u[uvidx] - scale * _u[idx];
             _u[uvidx + 1] = _u[uvidx + 1] + scale * _u[idx];
             uvidx = getIdx(x, y, _nx);
             _v[uvidx] = _v[uvidx] - scale * _u[idx];
             _v[uvidx + _nx] = _v[uvidx + _nx] + scale * _u[idx];
-            idx++;
         }
     }
 
     // Update boundaries
 
-    for (int y = 0; y < _ny; ++y) {
+    for (int y = 0, idx = 0; y < _ny; y++, idx++) {
         idx = getIdx(1, y, _nx + 1);
         _u[idx] = 0.0;
         _u[idx + 1] = 0.0;
@@ -144,7 +137,7 @@ void FluidSimulator::applyPressure() {
     }
 
 
-    for (int x = 0; x < _nx; ++x) {
+    for (int x = 0, idx = 0; x < _nx; x++, idx++) {
         idx = getIdx(x, 1, _nx);
         _v[idx] = 0.0;
         _v[idx + 1] = 0.0;
@@ -154,7 +147,7 @@ void FluidSimulator::applyPressure() {
     }
 
 
-    for (int y = 0; y < _ny; ++y) {
+    for (int y = 0, idx = 0; y < _ny; y++, idx++) {
         idx = getIdx(1, y, _nx);
         _T[idx] = TAMB;
         idx = getIdx(_nx, y, _nx);
@@ -162,7 +155,7 @@ void FluidSimulator::applyPressure() {
     }
 
 
-    for (int x = 0; x < _nx; ++x) {
+    for (int x = 0, idx = 0; x < _nx; x++, idx++) {
         idx = getIdx(x, 1, _nx);
         _T[idx] = TAMB;
         idx = getIdx(x, _ny, _nx);

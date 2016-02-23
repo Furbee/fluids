@@ -44,12 +44,17 @@ private:
     double _dt;
     double _umax;
 
+
+
+
+
     std::vector<double> _Adiag;
     std::vector<double> _Aplusi;
     std::vector<double> _Aplusj;
     std::vector<double> _Aplusk;
     std::vector<double> _rhs;
     std::vector<double> _pressure;
+    std::vector<double> _s;
     std::vector<double> _u;
     std::vector<double> _z;
     std::vector<double> _un;
