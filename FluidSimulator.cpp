@@ -26,3 +26,18 @@ void FluidSimulator::addInFlow(int x0, int y0, int x1, int y1, int w, int h, int
 void FluidSimulator::update(double dt) {
 
 }
+
+void FluidSimulator::buildRhs() {
+
+    double scale = 1/_dxy;
+
+    for (int y = 0, idx = 0; y < _ny; y++) {
+        for (int x = 0; x < _nx; x++, idx++) {
+            _rhs[idx] = -scale * ((_u[getIdx(x+1,y,_nx+1)] - _u[getIdx(x,y,_nx+1)])
+                        + (_v[getIdx(x,y+1,_ny)] - _v[getIdx(x,y,_ny)]));
+
+        }
+
+    }
+
+}
