@@ -179,3 +179,10 @@ double FluidSimulator::cerp2(double x, double y, int w, int h, double ox, double
     return cerp(q0, q1, q2, q3, y);
 
 }
+
+double FluidSimulator::lerp(double a, double b, double x) {
+
+    double xy = a*(1.0 - x) + b*x;
+
+    return xy;
+}
