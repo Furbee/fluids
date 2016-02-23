@@ -267,93 +267,44 @@ void FluidSimulator::applyBuoyancy() {
 
 
 }
+// NOT DONE
+void FluidSimulator::advect( double tStep, const FluidSimulator &u, const FluidSimulator &v ) {
+    int index = 0;
+    double x = 0 , y = 0;
 
-void FluidSimulator::advect() {
-
-    int idx = 0;
-    double ix, iy;
-    struct Point x0y0;
-
-    for (int y = 0; y < _ny; y++) {
-        for (int x = 0; y < _nx; x++) {
+    for( int idY = 0 ; idY < _ny ; idY++){
+        for( int idX = 0 ; idX < _nx ; idX++){
 
             //offset
-            ix = x + 0.5;
-            iy = y + 0.5;
+            x = idX + 0.5;
+            y = idY + 0.5;
 
-            x0y0 = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
-                    // = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+            double x0 = rungeKutta3(x, y, tStep, u, v);
+            double y0 = rungeKutta3(x, y, tStep, u, v);
 
-            _dn[idx] = cerp2(x0y0.x, x0y0.y, _nx, _ny, 0.5, 0.5, _d);
-
-            _dn[idx] = std::max(0, _dn[idx] * exp(-KDISS * _dt));
-
-            _Tn[idx] = cerp2(x0y0.x, x0y0.y, _nx, _ny, 0.5, 0.5, _T);
-
-            idx++;
+            _dn[index] = cerp2(x0, y0,_nx,_ny,0.5,0.5,u,v );
 
         }
 
     }
-
-    idx = 0;
-
-    for (int y = 0; y < _ny; y++) {
-        for (int x = 0; x <= _nx; x++) {
-
-            //offset
-            ix = x + 0.5;
-            iy = y + 0.5;
-
-            x = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
-            x0y0.y = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
-
-            _un[idx] = cerp2(x0y0.x, x0y0.y, (_nx + 1), _ny, 0.0, 0.5, _u);
-            idx++
-
-        }
-
-    }
-
-    idx = 0;
-    for (int y = 0; y <= _ny; y++) {
-        for (int x = 0; x < _nx; x++) {
-
-            //offset
-            ix = x + 0.5;
-            iy = y + 0.5;
-
-            x0y0.x = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
-            x0y0.y = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
-
-            _vn[idx] = cerp2(x0y0.x, x0y0.y, _nx, (_ny + 1), 0.5, 0.0, _v);
-            idx++;
-        }
-
-    }
-    //update u & v
-    _d = _dn;
-    _T = _Tn;
-    _u = _un;
-    _v = _vn;
 }
 
 
 void FluidSimulator::rungeKutta3(double &x, double &y, double tStep, const std::vector<double> &u, const std::vector<double> &v){
-    double earlyU = u.lerp(x, y)/ _nx;
-    double earlyV = v.lerp(x, y)/ _ny;
+    double earlyU = u.lerp2(x, y)/ _dxy;
+    double earlyV = v.lerp2(x, y)/ _dxy;
 
     double mX = x - (0.5 * tStep * earlyU);
     double mY = y - (0.5 * tStep * earlyV);
 
-    double mU = u.lerp(mX, mY)/ _nx;
-    double mV = v.lerp(mX, mY)/ _ny;
+    double mU = u.lerp2(mX, mY)/ _dxy;
+    double mV = v.lerp2(mX, mY)/ _dxy;
 
     double lateX = x - (0.75 * tStep * mU);
     double lateY = y - (0.75 * tStep * mV);
 
-    double lateU = u.lerp(lateX, lateY)/_nx;
-    double lateV = v.lerp(lateX, lateY)/_ny;
+    double lateU = u.lerp2(lateX, lateY);
+    double lateV = v.lerp2(lateX, lateY);
 
     x -= tStep * ( (2.0/9.0)*earlyU + (3.0/9.0)*mU + (4.0/9.0)*lateU );
     y -= tStep * ( ( (2.0/9.0)*earlyV + (3.0/9.0)*mV + (4.0/9.0)*lateV ))
