@@ -458,3 +458,22 @@ void FluidSimulator::buildPressureMatrix() {
 
 
 }
+
+double FluidSimulator::lerp2(double x, double y, double ox, double oy, int w, int h, std::vector<double> &quantity) {
+
+    x = std::min(std::max(x - ox, 1.0), w - 1.001);
+    y = std::min(std::max(y - oy, 1.0), h - 1.001);
+    int ix = static_cast<int>(x);
+    int iy = static_cast<int>(y);
+    x = x - ix;
+    y = y - iy;
+
+    double x00 = quantity[getIdx(ix, iy, w)];
+    double x10 = quantity[getIdx(ix+1, iy, w)];
+    double x01 = quantity[getIdx(ix, iy+1, w)];
+    double x11 = quantity[getIdx(ix+1, iy+1, w)];
+
+    return lerp(lerp(x00, x10, x), lerp(x01, x11, x), y);
+
+
+}
