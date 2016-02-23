@@ -14,6 +14,9 @@ class FluidSimulator {
 public:
     FluidSimulator();
 
+    void update(double dt);
+
+
 
 private:
 
@@ -107,7 +110,6 @@ private:
     void advect();
 
 
-    void update(double dt);
 
 
     void project();
