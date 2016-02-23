@@ -51,6 +51,13 @@ private:
     std::vector<double> _w;
     std::vector<double> _wn;
 
+    std::vector<double> _d;
+    std::vector<double> _dn;
+    std::vector<double> _T;
+    std::vector<double> _Tn;
+
+
+
 
     // MIC
     double _tau_mic = 0.97;
