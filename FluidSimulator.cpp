@@ -8,9 +8,6 @@
 FluidSimulator::FluidSimulator() {
 
 
-
-
-
 }
 
 
@@ -99,12 +96,12 @@ void FluidSimulator::applyPressure() {
 
 void FluidSimulator::buildRhs() {
 
-    double scale = 1/_dxy;
+    double scale = 1 / _dxy;
 
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++, idx++) {
-            _rhs[idx] = -scale * ((_u[getIdx(x+1,y,_nx+1)] - _u[getIdx(x,y,_nx+1)])
-                        + (_v[getIdx(x,y+1,_ny)] - _v[getIdx(x,y,_ny)]));
+            _rhs[idx] = -scale * ((_u[getIdx(x + 1, y, _nx + 1)] - _u[getIdx(x, y, _nx + 1)])
+                                  + (_v[getIdx(x, y + 1, _ny)] - _v[getIdx(x, y, _ny)]));
 
         }
 
@@ -181,7 +178,7 @@ void FluidSimulator::applyPrecon() {
 void FluidSimulator::applyBuoyancy() {
 
 
-    double alpha = (_DENSITYSOOT - _DENSITYAIR)/_DENSITYAIR;
+    double alpha = (_DENSITYSOOT - _DENSITYAIR) / _DENSITYAIR;
 
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++) {
@@ -203,21 +200,21 @@ void FluidSimulator::advect() {
     double ix, iy;
     struct Point x0y0;
 
-    for( int y = 0 ; y < _ny ; y++ ){
-        for( int x = 0 ; y < _nx ; x++ ){
+    for (int y = 0; y < _ny; y++) {
+        for (int x = 0; y < _nx; x++) {
 
             //offset
             ix = x + 0.5;
             iy = y + 0.5;
 
             x0y0 = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
-             // = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+                    // = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
 
-            _dn[idx] = cerp2( x0y0.x, x0y0.y, _nx, _ny, 0.5, 0.5, _d  );
+            _dn[idx] = cerp2(x0y0.x, x0y0.y, _nx, _ny, 0.5, 0.5, _d);
 
-            _dn[idx] = std::max(0, _dn[idx] * exp( -KDISS * _dt) );
+            _dn[idx] = std::max(0, _dn[idx] * exp(-KDISS * _dt));
 
-            _Tn[idx] = cerp2( x0y0.x, x0y0.y, _nx, _ny, 0.5, 0.5, _T );
+            _Tn[idx] = cerp2(x0y0.x, x0y0.y, _nx, _ny, 0.5, 0.5, _T);
 
             idx++;
 
@@ -227,8 +224,8 @@ void FluidSimulator::advect() {
 
     idx = 0;
 
-    for( int y = 0; y < _ny ; y++ ){
-        for(int x = 0 ; x <= _nx ; x++){
+    for (int y = 0; y < _ny; y++) {
+        for (int x = 0; x <= _nx; x++) {
 
             //offset
             ix = x + 0.5;
@@ -237,7 +234,7 @@ void FluidSimulator::advect() {
             x0y0.x = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
             x0y0.y = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
 
-            _un[idx] = cerp2( x0y0.x, x0y0.y, (_nx + 1), _ny, 0.0, 0.5, _u );
+            _un[idx] = cerp2(x0y0.x, x0y0.y, (_nx + 1), _ny, 0.0, 0.5, _u);
             idx++
 
         }
@@ -245,8 +242,8 @@ void FluidSimulator::advect() {
     }
 
     idx = 0;
-    for( int y = 0 ; y <= _ny ; y++ ){
-        for( int x = 0 ; x < _nx ; x++ ) {
+    for (int y = 0; y <= _ny; y++) {
+        for (int x = 0; x < _nx; x++) {
 
             //offset
             ix = x + 0.5;
@@ -255,7 +252,7 @@ void FluidSimulator::advect() {
             x0y0.x = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
             x0y0.y = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
 
-            _vn[idx] = cerp2( x0y0.x, x0y0.y, _nx, (_ny+1), 0.5, 0.0, _v);
+            _vn[idx] = cerp2(x0y0.x, x0y0.y, _nx, (_ny + 1), 0.5, 0.0, _v);
             idx++;
         }
 
@@ -287,13 +284,13 @@ double FluidSimulator::cerp2(double x, double y, int w, int h, double ox, double
     int y3 = std::min(iy + 2, h - 1);
 
     double q0 = cerp(quantity[getIdx(x0, y0, w)], quantity[getIdx(x1, y0, w)],
-    quantity[getIdx(x2, y0, w)], quantity[getIdx(x3, y0, w)], x);
+                     quantity[getIdx(x2, y0, w)], quantity[getIdx(x3, y0, w)], x);
     double q1 = cerp(quantity[getIdx(x0, y1, w)], quantity[getIdx(x1, y1, w)],
-    quantity[getIdx(x2, y1, w)], quantity[getIdx(x3, y1, w)], x);
+                     quantity[getIdx(x2, y1, w)], quantity[getIdx(x3, y1, w)], x);
     double q2 = cerp(quantity[getIdx(x0, y2, w)], quantity[getIdx(x1, y2, w)],
-    quantity[getIdx(x2, y2, w)], quantity[getIdx(x3, y2, w)], x);
+                     quantity[getIdx(x2, y2, w)], quantity[getIdx(x3, y2, w)], x);
     double q3 = cerp(quantity[getIdx(x0, y3, w)], quantity[getIdx(x1, y3, w)],
-    quantity[getIdx(x2, y3, w)], quantity[getIdx(x3, y3, w)], x);
+                     quantity[getIdx(x2, y3, w)], quantity[getIdx(x3, y3, w)], x);
 
     return cerp(q0, q1, q2, q3, y);
 
@@ -301,24 +298,57 @@ double FluidSimulator::cerp2(double x, double y, int w, int h, double ox, double
 
 double FluidSimulator::lerp(double a, double b, double x) {
 
-    double xy = a*(1.0 - x) + b*x;
+    double xy = a * (1.0 - x) + b * x;
 
     return xy;
 }
 
 double FluidSimulator::cerp(double a, double b, double c, double d, double x) {
 
-    double xsq = x*x;
-    double xcu = xsq*x;
+    double xsq = x * x;
+    double xcu = xsq * x;
     double minV = std::min(a, std::min(b, std::min(c, d)));
     double maxV = std::max(a, std::max(b, std::max(c, d)));
 
     double t =
-    a*(0.0 - 0.5*x + 1.0*xsq - 0.5*xcu) +
-    b*(1.0 + 0.0*x - 2.5*xsq + 1.5*xcu) +
-    c*(0.0 + 0.5*x + 2.0*xsq - 1.5*xcu) +
-    d*(0.0 + 0.0*x - 0.5*xsq + 0.5*xcu);
+            a * (0.0 - 0.5 * x + 1.0 * xsq - 0.5 * xcu) +
+            b * (1.0 + 0.0 * x - 2.5 * xsq + 1.5 * xcu) +
+            c * (0.0 + 0.5 * x + 2.0 * xsq - 1.5 * xcu) +
+            d * (0.0 + 0.0 * x - 0.5 * xsq + 0.5 * xcu);
 
     return std::min(std::max(t, minV), maxV);
+
+}
+
+void FluidSimulator::buildPressureMatrix() {
+
+    // Set up matrix entities for the pressure equations
+    double scale = _dt / (_RHO * _dxy * _dxy);
+    std::fill(_Adiag.begin(), _Adiag.end(), 0.0); // Coeffcient matrix for pressure equations
+    std::fill(_Adiag.begin(), _Adiag.end(), 0.0);
+    std::fill(_Adiag.begin(), _Adiag.end(), 0.0);
+
+    for (int y = 0, idx = 0; y < _ny; y++) {
+        for (int x = 0; x < _nx; x++, idx++) {
+
+            if (x < _nx - 1) {
+                _Adiag[idx] += scale;
+                _Adiag[idx + 1] += scale;
+                _Aplusi[idx] = (-scale);
+            } else {
+                _Aplusi[idx] = 0.0;
+            }
+
+            if (y < _ny - 1) {
+                _Adiag[idx] += scale;
+                _Adiag[idx + _nx] += scale;
+                _Aplusj[idx] = (-scale);
+            } else {
+                _Aplusj[idx] = 0.0;
+            }
+
+        }
+    }
+
 
 }
