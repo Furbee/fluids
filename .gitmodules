@@ -7,3 +7,4 @@
 [submodule "external/glew"]
 	path = external/glew
 	url = https://github.com/nigels-com/glew.git
+	ignore = dirty
