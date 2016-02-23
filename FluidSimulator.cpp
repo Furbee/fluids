@@ -73,11 +73,11 @@ void FluidSimulator::project() {
 
 //  Apply precon
 
-        applyPrecon;
+        applyPrecon();
 
         double sigmaNew = *glm::dot(_rhs.data(),_z.data());
 
-        scaleAdd(_s, _z, _s, sigmaNew/sigma)
+        scaleAdd(_s, _z, _s, sigmaNew/sigma);
         sigma = sigmaNew;
 
         std::cout << "Exceeded budget of " << _ITERLIMIT << " iterations, maximum error was " << maxError << std::endl;
@@ -250,7 +250,7 @@ void FluidSimulator::applyBuoyancy() {
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++) {
 
-            double buoyancy = _dt * _GRAVITY * (alpha * _d[idx] - (_T(idx) - TAMB) / TAMB);
+            double buoyancy = _dt * _GRAVITY * (alpha * _d[idx] - (_T[idx] - TAMB) / TAMB);
 
             _v[idx] += buoyancy * 0.5;
             _v[idx + _nx] += buoyancy * 0.5;
@@ -302,7 +302,7 @@ void FluidSimulator::advect() {
             x0y0.y = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
 
             _un[idx] = cerp2(x0y0.x, x0y0.y, (_nx + 1), _ny, 0.0, 0.5, _u);
-            idx++
+            idx++;
 
         }
 
@@ -349,7 +349,7 @@ void FluidSimulator::rungeKutta3(double &x, double &y, double tStep, const std::
     double lateV = v.lerp(lateX, lateY)/_ny;
 
     x -= tStep * ( (2.0/9.0)*earlyU + (3.0/9.0)*mU + (4.0/9.0)*lateU );
-    y -= tStep * ( ( (2.0/9.0)*earlyV + (3.0/9.0)*mV + (4.0/9.0)*lateV ))
+    y -= tStep * ( ( (2.0/9.0)*earlyV + (3.0/9.0)*mV + (4.0/9.0)*lateV ));
 }
 
 
