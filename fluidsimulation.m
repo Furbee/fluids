@@ -8,7 +8,7 @@ densitySoot = 0.11;
 densityAir = rho;
 tAmb = 273;
 kDiss = 0.1;
-
+epsilon = 1;
 
 dt = 1e-2; % time step
 tf = 4; % final time
@@ -33,6 +33,7 @@ v = zeros(nx*(ny+1), 1); % speed in y-direction
 pn = zeros(nx*ny, 1); % next pressure at each grid
 un = zeros((nx+1)*ny, 1); % next speed in x-direction
 vn = zeros(nx*(ny+1), 1); % next speed in y-direction
+w = zeros(nx*ny, 1); % vorticity
 rhs = zeros(nx*ny, 1); % right hand side
 Adiag = zeros(nx*ny, 1); % Coeffcient matrix for pressure equations
 Aplusi = zeros(nx*ny, 1); %
@@ -123,6 +124,50 @@ while time < maxtime
     end
     
     
+    % vorticity confinement
+    
+    % for every cell
+    % 1. get velocities in surrounding cell centers
+    % 2. calculate vorticity, w, in each cell using central differences
+    % 3. calculate gradient of the vorticity in each cell using central
+    %    differences
+    % 4. calculate unit vector N by normalizing w
+    % 5. calculate force with F = epsilon * dxy * ( N x w)
+    % 6. apply force to every cell face
+    
+%    for y = 2:ny-1
+%        for x = 2:nx-1
+%            uRight = (u(getIdx(x+2,y,nx+1)) + u(getIdx(x+1,y,nx+1)))*0.5;
+%            uLeft = (u(getIdx(x,y,nx+1)) + u(getIdx(x-1,y,nx+1)))*0.5;
+%            vTop = (v(getIdx(x,y-1,nx)) + v(getIdx(x,y,nx)))*0.5;
+%            vBottom = (v(getIdx(x,y+2,nx)) + v(getIdx(x,y+1,nx)))*0.5;
+%            
+%            w(getIdx(x,y,nx)) = ( (uRight - uLeft) - (vTop - vBottom)) / ( 2 * dxy);
+%            
+%        end
+%    end
+%    
+%    for y = 3:ny-2
+%        for x = 3:nx-2
+%            
+%            wi = w(getIdx(x+1,y,nx)) - w(getIdx(x-1,y,nx));
+%            wj = w(getIdx(x,y+1,nx)) - w(getIdx(x,y-1,nx));
+%            gradW = [ wi wj ];
+%            gradW = gradW / (2 * dxy);
+%            M = 1 / (dxy * dt);
+%            
+%            N = gradW / ( norm(gradW) + 10e-20 * M);
+%            
+%            fconf = epsilon * dxy * cross(N, gradW);
+%            
+%            
+%            
+%            
+%            
+%        end
+%    end
+%    
+%    
     
     %% project
     
@@ -287,7 +332,7 @@ while time < maxtime
             %dn(idx) = lerp2(x0, y0, 0.5, 0.5, nx, ny, d);
             dn(idx) = cerp2(x0, y0, nx, ny, 0.5, 0.5, d);
             
-            dn(idx) = max(0, dn(idx) - kDiss*dt);
+            dn(idx) = max(0, dn(idx) * exp( -kDiss * dt));
             
             Tn(idx) = cerp2(x0, y0, nx, ny, 0.5, 0.5, T);
             
