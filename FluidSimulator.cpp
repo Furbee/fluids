@@ -79,7 +79,7 @@ void FluidSimulator::applyBuoyancy() {
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++) {
 
-            double buoyancy = _dt * _gravity * (alpha * _d[idx] - (_T(idx) - tAmb) / tAmb);
+            double buoyancy = _dt * _gravity * (alpha * _d[idx] - (_T[idx] - tAmb) / tAmb);
             _v[idx] += buoyancy * 0.5;
             _v[idx + _nx] += buoyancy * 0.5;
 
