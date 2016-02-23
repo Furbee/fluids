@@ -14,6 +14,9 @@ class FluidSimulator {
 public:
     FluidSimulator();
 
+    void update(double dt);
+
+
 
 private:
 
@@ -22,17 +25,20 @@ private:
 
     const double _GRAVITY = 9.82; // gravity
     const double _RHO = 0.1; // density (1e3 for water, 1.3 for air)
-    const double _DENSITYSOOT= 0.11;
+    const double _DENSITYSOOT = 0.11;
     const double _DENSITYAIR = 0.1;
     const double TAMB = 273;
     const double KDISS = 0.1;
+    const int _ITERLIMIT = 600;
 
 
     // Member variables
 
     int _nx;
     int _ny;
-    int _nz;
+    unsigned int _nz;
+
+    unsigned int length;
 
     double _dxy;
     double _dt;
@@ -58,8 +64,8 @@ private:
     std::vector<double> _Tn;
 
     //struct arrays for x,y,z
-    struct Point{
-        double x,  y, z;
+    struct Point {
+        double x, y, z;
     };
 
 
@@ -78,23 +84,25 @@ private:
     }
 
 
-    double lerp(double a, double b, double x );
+    double lerp(double a, double b, double x);
 
     double lerp3(int x, int y, int z, float ox, float oy, float oz, int w, int h,
-                 std::unique_ptr<std::vector<double>> quantity );
+                 std::unique_ptr<std::vector<double>> quantity);
 
-    double cerp( double a, double b, double c, double d, double x );
+    double cerp(double a, double b, double c, double d, double x);
 
     double cerp2(double x, double y, int w, int h, double ox, double oy, std::vector<double> &quantity);
 
 
-    void addInFlow( int x0, int y0, int x1, int y1, int w, int h, int ox, int oy, double dxy, double value,
-                    std::unique_ptr<std::vector<double>> src);
+    void addInFlow(int x0, int y0, int x1, int y1, int w, int h, int ox, int oy, double dxy, double value,
+                   std::unique_ptr<std::vector<double>> src);
 
 
     void applyBuoyancy();
 
     void buildRhs();
+
+    void buildPressureMatrix();
 
     void buildPrecon();
 
@@ -107,12 +115,10 @@ private:
     void rungeKutta3(double &x, double &y, double tStep, const std::vector<double> &u, const std::vector<double> &v);
 
 
-    void update(double dt);
-
-
     void project();
 
 
+    void scaleAdd(std::vector<double> &curr, std::vector<double> &a, std::vector<double> &b, double s);
 
 
 
