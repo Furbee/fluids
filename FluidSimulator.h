@@ -60,7 +60,9 @@ private:
 
     // Functions
 
-    int getIdx(int x, int y, int z, int width);
+    inline int getIdx(int i, int j, int width) {
+        return i + j * width;
+    }
 
 
     double lerp(double a, double b, double x );
