@@ -261,10 +261,9 @@ void FluidSimulator::applyBuoyancy() {
 }
 
 // NOT DONE
-void FluidSimulator::advect(double tStep, const FluidSimulator &u, const FluidSimulator &v) {
+void FluidSimulator::advect() {
     int index = 0;
     double x = 0, y = 0;
-    double x = 0 , y = 0, x0 = 0, y0 = 0;
 
     for (int idY = 0; idY < _ny; idY++) {
         for (int idX = 0; idX < _nx; idX++) {
@@ -273,14 +272,13 @@ void FluidSimulator::advect(double tStep, const FluidSimulator &u, const FluidSi
             x = idX + 0.5;
             y = idY + 0.5;
 
-            x0 = rungeKutta3(x, y, tStep, u, v);
-            y0 = rungeKutta3(x, y, tStep, u, v);
+            rungeKutta3(x, y);
 
-            _dn[index] = cerp2(x0, y0, _nx, _ny, 0.5, 0.5, u, v);
+            _dn[index] = cerp2(x, y, _nx, _ny, 0.5, 0.5, _d);
 
-            _dn[index] = cerp2(x0, y0,_nx,_ny,0.5,0.5,_d );
-            _dn[index] = std::max(0, _dn * exp(-KDISS * _dt));
-            _Tn[index] = cerp2(x0, y0, _nx, _ny, 0.5, 0.5, _T);
+            _dn[index] = cerp2(x, y,_nx,_ny,0.5,0.5,_d );
+            _dn[index] = std::max(0, _dn[index] * exp(-KDISS * _dt));
+            _Tn[index] = cerp2(x, y, _nx, _ny, 0.5, 0.5, _T);
             index++;
         }
     }
@@ -294,10 +292,9 @@ void FluidSimulator::advect(double tStep, const FluidSimulator &u, const FluidSi
             x = idX + 0.5;
             y = idY + 0.5;
 
-            x0 = rungeKutta3(x, y, tStep, u, v);
-            y0 = rungeKutta3(x, y, tStep, u, v);
+            rungeKutta3(x, y);
 
-            _un[index] = cerp2(x0, y0, (_nx + 1), _ny, 0.0, 0.5, u);
+            _un[index] = cerp2(x, y, (_nx + 1), _ny, 0.0, 0.5, _u);
             index++;
 
         }
@@ -309,11 +306,12 @@ void FluidSimulator::advect(double tStep, const FluidSimulator &u, const FluidSi
         for (int idX = 0; idX < _nx; idX++) {
 
             //offset
+            x = idX + 0.5;
+            y = idY + 0.5;
 
-            x0 = rungeKutta3(x, y, tStep, u, v);
-            y0 = rungeKutta3(x, y, tStep, u, v);
+            rungeKutta3(x, y);
 
-            _vn[index] = cerp2(x0, y0, _nx, (_ny + 1), 0.5, 0.0, v);
+            _vn[index] = cerp2(x, y, _nx, (_ny + 1), 0.5, 0.0, _v);
             index++;
 
         }
@@ -445,7 +443,7 @@ void FluidSimulator::buildPressureMatrix() {
 
 }
 
-double FluidSimulator::lerp2(double x, double y, std::vector<double> &quantity) {
+double FluidSimulator::lerp2(double x, double y, const std::vector<double> &quantity) {
 
     x = std::min(std::max(x - 0.5, 1.0), _nx - 1.001);
     y = std::min(std::max(y - 0.5, 1.0), _ny - 1.001);

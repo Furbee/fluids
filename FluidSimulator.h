@@ -89,11 +89,11 @@ private:
     double lerp(double a, double b, double x);
 
 
-    double lerp2(double x, double y, double ox, double oy, int w, int h, std::vector<double> &quantity);
+    double lerp2(double x, double y, const std::vector<double> &quantity);
 
 
-    double lerp3(int x, int y, int z, float ox, float oy, float oz, int w, int h,
-                 std::unique_ptr<std::vector<double>> quantity);
+    //double lerp3(int x, int y, int z, float ox, float oy, float oz, int w, int h,
+    //             std::unique_ptr<std::vector<double>> quantity);
 
     double cerp(double a, double b, double c, double d, double x);
 
@@ -116,7 +116,7 @@ private:
 
     void applyPressure();
 
-    void advect(double tStep, const FluidSimulator &u, const FluidSimulator &v );
+    void advect();
 
     void rungeKutta3(double &x, double &y, double tStep, const std::vector<double> &u, const std::vector<double> &v);
 
