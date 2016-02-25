@@ -276,7 +276,7 @@ void FluidSimulator::advect(double tStep, const FluidSimulator &u, const FluidSi
             _dn[index] = cerp2(x0, y0, _nx, _ny, 0.5, 0.5, u, v);
 
             _dn[index] = cerp2(x0, y0,_nx,_ny,0.5,0.5,_d );
-            _dn[index] = max(0, _dn * exp(-KDISS * _dt));
+            _dn[index] = std::max(0, _dn * exp(-KDISS * _dt));
             _Tn[index] = cerp2(x0, y0, _nx, _ny, 0.5, 0.5, _T);
             index++;
         }
@@ -326,20 +326,20 @@ void FluidSimulator::advect(double tStep, const FluidSimulator &u, const FluidSi
 
 void FluidSimulator::rungeKutta3(double &x, double &y, double tStep, const std::vector<double> &u,
                                  const std::vector<double> &v) {
-    double earlyU = u.lerp2(x, y) / _dxy;
-    double earlyV = v.lerp2(x, y) / _dxy;
+    double earlyU = lerp2(x, y, u) / _dxy;
+    double earlyV = lerp2(x, y, v) / _dxy;
 
     double mX = x - (0.5 * tStep * earlyU);
     double mY = y - (0.5 * tStep * earlyV);
 
-    double mU = u.lerp2(mX, mY) / _dxy;
-    double mV = v.lerp2(mX, mY) / _dxy;
+    double mU = lerp2(mX, mY, u) / _dxy;
+    double mV = lerp2(mX, mY, v) / _dxy;
 
     double lateX = x - (0.75 * tStep * mU);
     double lateY = y - (0.75 * tStep * mV);
 
-    double lateU = u.lerp2(lateX, lateY);
-    double lateV = v.lerp2(lateX, lateY);
+    double lateU = lerp2(lateX, lateY, u);
+    double lateV = lerp2(lateX, lateY, v);
 
     x -= tStep * ((2.0 / 9.0) * earlyU + (3.0 / 9.0) * mU + (4.0 / 9.0) * lateU);
     y -= tStep * (((2.0 / 9.0) * earlyV + (3.0 / 9.0) * mV + (4.0 / 9.0) * lateV));
@@ -446,19 +446,19 @@ void FluidSimulator::buildPressureMatrix() {
 
 }
 
-double FluidSimulator::lerp2(double x, double y, double ox, double oy, int w, int h, std::vector<double> &quantity) {
+double FluidSimulator::lerp2(double x, double y, std::vector<double> &quantity) {
 
-    x = std::min(std::max(x - ox, 1.0), w - 1.001);
-    y = std::min(std::max(y - oy, 1.0), h - 1.001);
+    x = std::min(std::max(x - 0.5, 1.0), _nx - 1.001);
+    y = std::min(std::max(y - 0.5, 1.0), _ny - 1.001);
     int ix = static_cast<int>(x);
     int iy = static_cast<int>(y);
     x = x - ix;
     y = y - iy;
 
-    double x00 = quantity[getIdx(ix, iy, w)];
-    double x10 = quantity[getIdx(ix + 1, iy, w)];
-    double x01 = quantity[getIdx(ix, iy + 1, w)];
-    double x11 = quantity[getIdx(ix + 1, iy + 1, w)];
+    double x00 = quantity[getIdx(ix, iy, _nx)];
+    double x10 = quantity[getIdx(ix + 1, iy, _nx)];
+    double x01 = quantity[getIdx(ix, iy + 1, _nx)];
+    double x11 = quantity[getIdx(ix + 1, iy + 1, _nx)];
 
     return lerp(lerp(x00, x10, x), lerp(x01, x11, x), y);
 
