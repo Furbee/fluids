@@ -118,7 +118,7 @@ private:
 
     void advect();
 
-    void rungeKutta3(double &x, double &y, double tStep, const std::vector<double> &u, const std::vector<double> &v);
+    void rungeKutta3(double &x, double &y);
 
 
     void project();
