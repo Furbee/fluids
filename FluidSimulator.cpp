@@ -327,22 +327,21 @@ void FluidSimulator::advect(double tStep, const FluidSimulator &u, const FluidSi
 }
 
 
-void FluidSimulator::rungeKutta3(double &x, double &y, const std::vector<double> &u,
-                                  const std::vector<double> &v) {
-    double earlyU = lerp2(x, y, u) / _dxy;
-    double earlyV = lerp2(x, y, v) / _dxy;
+void FluidSimulator::rungeKutta3(double &x, double &y) {
+    double earlyU = lerp2(x, y, _u) / _dxy;
+    double earlyV = lerp2(x, y, _v) / _dxy;
 
     double mX = x - (0.5 * _dt * earlyU);
     double mY = y - (0.5 * _dt * earlyV);
 
-    double mU = lerp2(mX, mY, u) / _dxy;
-    double mV = lerp2(mX, mY, v) / _dxy;
+    double mU = lerp2(mX, mY, _u) / _dxy;
+    double mV = lerp2(mX, mY, _v) / _dxy;
 
     double lateX = x - (0.75 * _dt * mU);
     double lateY = y - (0.75 * _dt * mV);
 
-    double lateU = lerp2(lateX, lateY, u);
-    double lateV = lerp2(lateX, lateY, v);
+    double lateU = lerp2(lateX, lateY, _u);
+    double lateV = lerp2(lateX, lateY, _v);
 
     x -= _dt * ((2.0 / 9.0) * earlyU + (3.0 / 9.0) * mU + (4.0 / 9.0) * lateU);
     y -= _dt * (((2.0 / 9.0) * earlyV + (3.0 / 9.0) * mV + (4.0 / 9.0) * lateV));
