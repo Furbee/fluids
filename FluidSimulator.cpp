@@ -4,6 +4,7 @@
 
 #include <complex>
 #include <iostream>
+#include <numeric>
 #include "FluidSimulator.h"
 
 
@@ -32,7 +33,7 @@ void FluidSimulator::project() {
     if (maxError < 1e-5)
         return;
 
-    double sigma = *glm::dot(_rhs.data(), _z.data());
+    double sigma = std::inner_product(_rhs.begin(), _rhs.end(), _z.begin(), 0.0);
 
 // Iterative solver
 
@@ -56,7 +57,7 @@ void FluidSimulator::project() {
             }
         }
 
-        double alpha = sigma / *glm::dot(_z.data(), _s.data());
+        double alpha = sigma / std::inner_product(_z.begin(), _z.end(), _s.begin(), 0.0);
 
 //  Scaled add
 
@@ -74,7 +75,7 @@ void FluidSimulator::project() {
 
         applyPrecon();
 
-        double sigmaNew = *glm::dot(_rhs.data(), _z.data());
+        double sigmaNew = std::inner_product(_rhs.begin(), _rhs.end(), _z.begin(), 0.0);
 
         scaleAdd(_s, _z, _s, sigmaNew / sigma);
         sigma = sigmaNew;
@@ -276,6 +277,8 @@ void FluidSimulator::advect() {
 
             _dn[index] = cerp2(x, y, _nx, _ny, 0.5, 0.5, _d);
 
+            _dn[index] = cerp2(x, y,_nx,_ny,0.5,0.5,_d );
+            _dn[index] = std::max(0.0, _dn[index] * exp(-KDISS * _dt));
             _dn[index] = cerp2(x, y, _nx, _ny, 0.5, 0.5, _d);
             _dn[index] = std::max(0.0, _dn[index] * exp(-KDISS * _dt));
             _Tn[index] = cerp2(x, y, _nx, _ny, 0.5, 0.5, _T);

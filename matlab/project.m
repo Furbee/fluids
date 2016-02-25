@@ -18,7 +18,7 @@ if maxError < 1e-5
     return;
 end
 
-sigma = dot(rhs,z);
+sigma = dot(rhs,z)
 
 % Iterative solver
 for iter = 1:iter_limit
