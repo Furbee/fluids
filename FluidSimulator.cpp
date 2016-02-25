@@ -12,6 +12,9 @@ FluidSimulator::FluidSimulator() {
 
 }
 
+static bool absCompare(double a, double b) {
+    return (std::abs(a) < std::abs(b));
+}
 
 void FluidSimulator::project() {
 
@@ -402,10 +405,6 @@ double FluidSimulator::cerp(double a, double b, double c, double d, double x) {
 
 }
 
-
-static bool absCompare(double a, double b) {
-    return (std::abs(a) < std::abs(b));
-}
 
 void FluidSimulator::scaleAdd(std::vector<double> &curr, std::vector<double> &a, std::vector<double> &b, double s) {
     for (int i = 0; i < _nx * _ny; ++i) {
