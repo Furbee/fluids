@@ -327,25 +327,25 @@ void FluidSimulator::advect(double tStep, const FluidSimulator &u, const FluidSi
 }
 
 
-void FluidSimulator::rungeKutta3(double &x, double &y, double tStep, const std::vector<double> &u,
-                                 const std::vector<double> &v) {
+void FluidSimulator::rungeKutta3(double &x, double &y, const std::vector<double> &u,
+                                  const std::vector<double> &v) {
     double earlyU = lerp2(x, y, u) / _dxy;
     double earlyV = lerp2(x, y, v) / _dxy;
 
-    double mX = x - (0.5 * tStep * earlyU);
-    double mY = y - (0.5 * tStep * earlyV);
+    double mX = x - (0.5 * _dt * earlyU);
+    double mY = y - (0.5 * _dt * earlyV);
 
     double mU = lerp2(mX, mY, u) / _dxy;
     double mV = lerp2(mX, mY, v) / _dxy;
 
-    double lateX = x - (0.75 * tStep * mU);
-    double lateY = y - (0.75 * tStep * mV);
+    double lateX = x - (0.75 * _dt * mU);
+    double lateY = y - (0.75 * _dt * mV);
 
     double lateU = lerp2(lateX, lateY, u);
     double lateV = lerp2(lateX, lateY, v);
 
-    x -= tStep * ((2.0 / 9.0) * earlyU + (3.0 / 9.0) * mU + (4.0 / 9.0) * lateU);
-    y -= tStep * (((2.0 / 9.0) * earlyV + (3.0 / 9.0) * mV + (4.0 / 9.0) * lateV));
+    x -= _dt * ((2.0 / 9.0) * earlyU + (3.0 / 9.0) * mU + (4.0 / 9.0) * lateU);
+    y -= _dt * (((2.0 / 9.0) * earlyV + (3.0 / 9.0) * mV + (4.0 / 9.0) * lateV));
 }
 
 
@@ -445,7 +445,7 @@ void FluidSimulator::buildPressureMatrix() {
 
 }
 
-double FluidSimulator::lerp2(double x, double y, std::vector<double> &quantity) {
+double FluidSimulator::lerp2(double x, double y, const std::vector<double> &quantity) {
 
     x = std::min(std::max(x - 0.5, 1.0), _nx - 1.001);
     y = std::min(std::max(y - 0.5, 1.0), _ny - 1.001);
