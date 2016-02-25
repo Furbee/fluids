@@ -263,7 +263,7 @@ void FluidSimulator::applyBuoyancy() {
 // NOT DONE
 void FluidSimulator::advect( double tStep, const FluidSimulator &u, const FluidSimulator &v ) {
     int index = 0;
-    double x = 0 , y = 0;
+    double x = 0 , y = 0, x0 = 0, y0 = 0;
 
     for( int idY = 0 ; idY < _ny ; idY++){
         for( int idX = 0 ; idX < _nx ; idX++){
@@ -272,51 +272,51 @@ void FluidSimulator::advect( double tStep, const FluidSimulator &u, const FluidS
             x = idX + 0.5;
             y = idY + 0.5;
 
-            double x0 = rungeKutta3(x, y, tStep, u, v);
-            double y0 = rungeKutta3(x, y, tStep, u, v);
+            x0 = rungeKutta3(x, y, tStep, u, v);
+            y0 = rungeKutta3(x, y, tStep, u, v);
 
-            _dn[index] = cerp2(x0, y0,_nx,_ny,0.5,0.5,u,v );
-
+            _dn[index] = cerp2(x0, y0,_nx,_ny,0.5,0.5,_d );
+            _dn[index] = max(0, _dn * exp(-KDISS * _dt));
+            _Tn[index] = cerp2(x0, y0, _nx, _ny, 0.5, 0.5, _T);
+            index++;
         }
-
     }
 
-    idx = 0;
+    index = 0;
 
-    for (int y = 0; y < _ny; y++) {
-        for (int x = 0; x <= _nx; x++) {
+    for( int idY = 0 ; idY < _ny ; idY++) {
+        for (int idX = 0; idX <= _nx; idX++) {
 
             //offset
-            ix = x + 0.5;
-            iy = y + 0.5;
+            x = idX + 0.5;
+            y = idY + 0.5;
 
-            x = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
-            x0y0.y = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+            x0 = rungeKutta3(x, y, tStep, u, v);
+            y0 = rungeKutta3(x, y, tStep, u, v);
 
-            _un[idx] = cerp2(x0y0.x, x0y0.y, (_nx + 1), _ny, 0.0, 0.5, _u);
-            idx++;
+            _un[index] = cerp2(x0, y0, (_nx + 1), _ny, 0.0, 0.5, u);
+            index++;
 
         }
-
     }
 
-    idx = 0;
-    for (int y = 0; y <= _ny; y++) {
-        for (int x = 0; x < _nx; x++) {
+    index = 0;
+
+    for( int idY = 0 ; idY <= _ny ; idY++) {
+        for (int idX = 0; idX < _nx; idX++) {
 
             //offset
-            ix = x + 0.5;
-            iy = y + 0.5;
 
-            x0y0.x = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
-            x0y0.y = //rungeKutta(ix, iy, dt, _u, _v, _dxy, _nx, _ny);
+            x0 = rungeKutta3(x, y, tStep, u, v);
+            y0 = rungeKutta3(x, y, tStep, u, v);
 
-            _vn[idx] = cerp2(x0y0.x, x0y0.y, _nx, (_ny + 1), 0.5, 0.0, _v);
-            idx++;
+            _vn[index] = cerp2(x0, y0, _nx, (_ny + 1), 0.5, 0.0, v);
+            index++;
+
         }
-
     }
-    //update u & v
+
+    //update the vectors
     _d = _dn;
     _T = _Tn;
     _u = _un;
