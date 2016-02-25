@@ -279,6 +279,8 @@ void FluidSimulator::advect() {
 
             _dn[index] = cerp2(x, y,_nx,_ny,0.5,0.5,_d );
             _dn[index] = std::max(0.0, _dn[index] * exp(-KDISS * _dt));
+            _dn[index] = cerp2(x, y, _nx, _ny, 0.5, 0.5, _d);
+            _dn[index] = std::max(0.0, _dn[index] * exp(-KDISS * _dt));
             _Tn[index] = cerp2(x, y, _nx, _ny, 0.5, 0.5, _T);
             index++;
         }
@@ -286,7 +288,7 @@ void FluidSimulator::advect() {
 
     index = 0;
 
-    for( int idY = 0 ; idY < _ny ; idY++) {
+    for (int idY = 0; idY < _ny; idY++) {
         for (int idX = 0; idX <= _nx; idX++) {
 
             //offset
@@ -303,7 +305,7 @@ void FluidSimulator::advect() {
 
     index = 0;
 
-    for( int idY = 0 ; idY <= _ny ; idY++) {
+    for (int idY = 0; idY <= _ny; idY++) {
         for (int idX = 0; idX < _nx; idX++) {
 
             //offset

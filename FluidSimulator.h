@@ -125,8 +125,6 @@ private:
 
 
     void scaleAdd(std::vector<double> &curr, std::vector<double> &a, std::vector<double> &b, double s);
-
-
 };
 
 
