@@ -3,6 +3,7 @@
 //
 
 #include "Renderer.h"
+#include "Shader.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -42,8 +43,8 @@ void Renderer::draw() {
 
     GLFWwindow *window;
 
-    const GLchar *vertexShaderSource = ("shader/vertShader.vert");
-    const GLchar *fragmentShaderSource = ("shader/fragShader.frag");
+    Shader Shaders("shader/vertShader.vert", "shader/fragShader.frag");
+
 
     glfwSetErrorCallback(error_callback);
 
@@ -79,62 +80,17 @@ void Renderer::draw() {
 
     glViewport(0, 0, WIDTH, HEIGHT);
 
-
-    //build Vertex shader
-    GLuint vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    //check for errors and log if exists
-    GLint success;
-    GLchar infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-
-    //build Fragment shader
-    GLuint fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    //check for errors and log
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-
-    //build Shader Program
-    GLuint shaderProgram;
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    //check if errors exists
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-
-
     // Vertex corner points
     GLfloat vertices[] = {
             -0.5f, -0.5f, 0.0f, //LEFT
-            0.5f, 0.5f, 0.0f, //RIGHT
-            0.0f, 0.5f, 0.0f  //TOP
+            0.5f, 0.5f, 0.0f,   //RIGHT
+            0.0f, 0.5f, 0.0f    //TOP
     };
     GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
+    Shaders.Use();
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -159,7 +115,6 @@ void Renderer::draw() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);

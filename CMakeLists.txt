@@ -35,7 +35,7 @@ add_definitions(
   -DGLEW_STATIC
 )
 
-add_executable(fluid-simulation main.cpp Renderer.cpp Renderer.h FluidSimulator.cpp FluidSimulator.h)
+add_executable(fluid-simulation main.cpp Renderer.cpp Renderer.h FluidSimulator.cpp FluidSimulator.h Shader.cpp Shader.h)
 target_link_libraries("fluid-simulation" glfw ${GLFW_LIBRARIES} glew)
 
 #if (APPLE)
