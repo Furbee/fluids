@@ -89,7 +89,7 @@ private:
     double lerp(double a, double b, double x);
 
 
-    double lerp2(double x, double y, const std::vector<double> &quantity);
+    double lerp2(double x, double y, double ox, double oy, int w, int h, const std::vector<double> &quantity);
 
 
     //double lerp3(int x, int y, int z, float ox, float oy, float oz, int w, int h,
