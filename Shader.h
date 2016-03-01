@@ -1,6 +1,7 @@
 //
 // Created by Oscar Nord on 01/03/16.
 //
+// Taken from learnopengl.com
 
 #ifndef FLUID_SIMULATION_SHADER_H
 #define FLUID_SIMULATION_SHADER_H

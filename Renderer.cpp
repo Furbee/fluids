@@ -43,7 +43,7 @@ void Renderer::draw() {
 
     GLFWwindow *window;
 
-    Shader Shaders("shader/vertShader.vert", "shader/fragShader.frag");
+    Shader Shaders("shaders/vertShader.vert", "shaders/fragShader.frag");
 
 
     glfwSetErrorCallback(error_callback);
