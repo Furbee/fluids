@@ -12,6 +12,7 @@
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include "Shader.h"
 
 
 class Renderer {

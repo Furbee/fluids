@@ -43,9 +43,6 @@ void Renderer::draw() {
 
     GLFWwindow *window;
 
-    Shader Shaders("shaders/vertShader.vert", "shaders/fragShader.frag");
-
-
     glfwSetErrorCallback(error_callback);
 
     //initiate GLFW
@@ -79,6 +76,8 @@ void Renderer::draw() {
     glewInit();
 
     glViewport(0, 0, WIDTH, HEIGHT);
+
+    Shader Shaders("shaders/vertShader.vert", "shaders/fragShader.frag");
 
     // Vertex corner points
     GLfloat vertices[] = {
