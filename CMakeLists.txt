@@ -56,3 +56,10 @@ target_link_libraries("fluid-simulation" glfw ${GLFW_LIBRARIES} glew)
 #  set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_LONG_VERSION_STRING "1.0")
 #  set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_STRING "OpenGL boilerplate example app")
 #endif()
+
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+
+include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
+
+target_link_libraries(fluid-simulation ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} )
