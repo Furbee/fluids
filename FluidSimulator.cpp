@@ -329,20 +329,20 @@ void FluidSimulator::advect() {
 
 
 void FluidSimulator::rungeKutta3(double &x, double &y) {
-    double earlyU = lerp2(x, y, _u) / _dxy;
-    double earlyV = lerp2(x, y, _v) / _dxy;
+    double earlyU = lerp2(x, y, 0.0, 0.5, _nx+1, _ny, _u) / _dxy;
+    double earlyV = lerp2(x, y, 0.5, 0.0, _nx, _ny, _v) / _dxy;
 
     double mX = x - (0.5 * _dt * earlyU);
     double mY = y - (0.5 * _dt * earlyV);
 
-    double mU = lerp2(mX, mY, _u) / _dxy;
-    double mV = lerp2(mX, mY, _v) / _dxy;
+    double mU = lerp2(mX, mY, 0.0, 0.5, _nx+1, _ny, _u) / _dxy;
+    double mV = lerp2(mX, mY, 0.5, 0.0, _nx, _ny, _v) / _dxy;
 
     double lateX = x - (0.75 * _dt * mU);
     double lateY = y - (0.75 * _dt * mV);
 
-    double lateU = lerp2(lateX, lateY, _u);
-    double lateV = lerp2(lateX, lateY, _v);
+    double lateU = lerp2(lateX, lateY, 0.0, 0.5, _nx+1, _ny, _u);
+    double lateV = lerp2(lateX, lateY, 0.5, 0.0, _nx, _ny, _v);
 
     x -= _dt * ((2.0 / 9.0) * earlyU + (3.0 / 9.0) * mU + (4.0 / 9.0) * lateU);
     y -= _dt * (((2.0 / 9.0) * earlyV + (3.0 / 9.0) * mV + (4.0 / 9.0) * lateV));
@@ -445,19 +445,18 @@ void FluidSimulator::buildPressureMatrix() {
 
 }
 
-double FluidSimulator::lerp2(double x, double y, const std::vector<double> &quantity) {
-
-    x = std::min(std::max(x - 0.5, 1.0), _nx - 1.001);
-    y = std::min(std::max(y - 0.5, 1.0), _ny - 1.001);
+double FluidSimulator::lerp2(double x, double y, double ox, double oy, int w, int h, const std::vector<double> &quantity) {
+    x = std::min(std::max(x - ox, 1.0), w - 1.001);
+    y = std::min(std::max(y - oy, 1.0), h - 1.001);
     int ix = static_cast<int>(x);
     int iy = static_cast<int>(y);
     x = x - ix;
     y = y - iy;
 
-    double x00 = quantity[getIdx(ix, iy, _nx)];
-    double x10 = quantity[getIdx(ix + 1, iy, _nx)];
-    double x01 = quantity[getIdx(ix, iy + 1, _nx)];
-    double x11 = quantity[getIdx(ix + 1, iy + 1, _nx)];
+    double x00 = quantity[getIdx(ix, iy, w)];
+    double x10 = quantity[getIdx(ix + 1, iy, w)];
+    double x01 = quantity[getIdx(ix, iy + 1, w)];
+    double x11 = quantity[getIdx(ix + 1, iy + 1, w)];
 
     return lerp(lerp(x00, x10, x), lerp(x01, x11, x), y);
 
