@@ -14,7 +14,10 @@ class FluidSimulator {
 public:
     FluidSimulator();
 
-    void update(double dt);
+    void update();
+    double getTimestep();
+
+    std::vector<double>& getDensity();
 
 
 private:
@@ -33,9 +36,9 @@ private:
 
     // Member variables
 
-    int _nx;
-    int _ny;
-    unsigned int _nz;
+    unsigned int _nx;
+    unsigned int _ny;
+    int _nz;
 
     unsigned int length;
 
@@ -67,6 +70,7 @@ private:
     std::vector<double> _T;
     std::vector<double> _Tn;
 
+    std::vector<double> _precon;
     //struct arrays for x,y,z
     struct Point {
         double x, y, z;
@@ -76,7 +80,6 @@ private:
     // MIC
     double _tau_mic = 0.97;
     double _sigma_mic = 0.25;
-    std::vector<double> _precon;
 
 
     // Functions
@@ -100,8 +103,9 @@ private:
     double cerp2(double x, double y, int w, int h, double ox, double oy, std::vector<double> &quantity);
 
 
-    void addInFlow(int x0, int y0, int x1, int y1, int w, int h, int ox, int oy, double dxy, double value,
-                   std::unique_ptr<std::vector<double>> src);
+    void addInFlow(double x0, double y0, double x1, double y1, int w, int h, double ox, double oy, double dxy,
+                   double value,
+                   std::vector<double> &src);
 
 
     void applyBuoyancy();

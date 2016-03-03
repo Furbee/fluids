@@ -16,6 +16,21 @@
 
 int main(void) {
 
-    Renderer::draw();
+    FluidSimulator fluidSimulator;
+
+    double time = 0.0;
+
+    while(time < 8.0) {
+
+        fluidSimulator.update();
+
+        time += fluidSimulator.getTimestep();
+
+    }
+
+
+
+
+    //Renderer::draw();
 
 }

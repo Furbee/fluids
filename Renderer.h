@@ -12,20 +12,24 @@
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <vector>
 #include "Shader.h"
 
 
 class Renderer {
 
 public:
-    Renderer();
+    Renderer() {};
 
-    static void draw();
+    static void init();
+    static void draw(std::vector<double> densityValues);
 
 
 private:
 
     //Functions
+
+    std::vector<float> pixels;
 
     static void error_callback(int error, const char *description);
 

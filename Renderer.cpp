@@ -30,7 +30,7 @@ void Renderer::render(GLFWwindow *window) {
 
 }
 
-void Renderer::draw() {
+void Renderer::init() {
 
     /*******************************************
      *              SIZE OF WINDOW
@@ -79,12 +79,6 @@ void Renderer::draw() {
 
     Shader Shaders("../shaders/vertShader.vert", "../shaders/fragShader.frag");
 
-    // Vertex corner points
-    GLfloat vertices[] = {
-            -0.5f, -0.5f, 0.0f, //LEFT
-            0.5f, 0.5f, 0.0f,   //RIGHT
-            0.0f, 0.5f, 0.0f    //TOP
-    };
     GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -93,10 +87,31 @@ void Renderer::draw() {
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *) 0);
-    glEnableVertexAttribArray(0);
+    GLuint frameBuffer = 0;
+    glGenFramebuffers(1, &frameBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+
+    GLuint renderedTexture;
+    glGenTextures(1, &renderedTexture);
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+
+
+
+
+
+
+
+
+    // Give an empty image to OpenGL ( the last "0" )
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, 1024, 768, 0,GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+    // Poor filtering. Needed !
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 

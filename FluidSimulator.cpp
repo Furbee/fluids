@@ -10,6 +10,40 @@
 
 FluidSimulator::FluidSimulator() {
 
+    _nx = 32;
+    _ny = 32;
+    _nz = 32;
+
+    length = _nx*_ny;
+
+    _dxy = 1.0/std::max(_nx,_ny);
+    _dt = 0.0025;
+    _umax = 0.0;
+
+    _Adiag = std::vector<double>(length, 0);
+    _Aplusi = std::vector<double>(length, 0);
+    _Aplusj = std::vector<double>(length, 0);
+    _Aplusk = std::vector<double>(length, 0);
+    _rhs = std::vector<double>(length, 0);
+    _pressure = std::vector<double>(length, 0);
+    _s = std::vector<double>(length, 0);
+    _z = std::vector<double>(length, 0);
+    _u = std::vector<double>((_nx+1)*_ny, 0);
+    _un = std::vector<double>((_nx+1)*_ny, 0);
+    _v = std::vector<double>(_nx*(_ny+1), 0);
+    _vn = std::vector<double>(_nx*(_ny+1), 0);
+//    std::vector<double> _w
+//    std::vector<double> _wn;
+
+    _d = std::vector<double>(length, 0);
+    _dn = std::vector<double>(length, 0);
+    _T = std::vector<double>(length, 0);
+    _Tn = std::vector<double>(length, 0);
+    _precon = std::vector<double>(length, 0);
+
+
+
+
 
 }
 
@@ -64,7 +98,7 @@ void FluidSimulator::project() {
         scaleAdd(_pressure, _pressure, _s, alpha);
         scaleAdd(_rhs, _rhs, _z, -alpha);
 
-        double maxError = *std::max_element(_rhs.begin(), _rhs.end(), absCompare);
+        maxError = *std::max_element(_rhs.begin(), _rhs.end(), absCompare);
 
         if (maxError < 1e-5) {
             std::cout << "Exiting solver after " << iter << " iterarions, maximum error is " << maxError << std::endl;
@@ -86,22 +120,73 @@ void FluidSimulator::project() {
 
 }
 
-void FluidSimulator::addInFlow(int x0, int y0, int x1, int y1, int w, int h, int ox, int oy, double dxy, double value,
-                               std::unique_ptr<std::vector<double>> src) {
+void FluidSimulator::addInFlow(double x0, double y0, double x1, double y1, int w, int h, double ox, double oy,
+                               double dxy,
+                               double value,
+                               std::vector<double> &src) {
+
+    int ix0 = (int)(x0/dxy - ox);
+    int iy0 = (int)(y0/dxy - oy);
+    int ix1 = (int)(x1/dxy - ox);
+    int iy1 = (int)(y1/dxy - oy);
+
+
+    for(int y = std::max(iy0,0); y < std::min(iy1, h); y++ ) {
+        for(int x = std::max(ix0,0); x < std::min(ix1, h); x++) {
+            double l = hypot((2.0*(x + 0.5)*dxy - (x0 + x1))/(x1 - x0),
+                        (2.0*(y + 0.5)*dxy - (y0 + y1))/(y1 - y0));
+            double temp = std::min(std::abs(l), 1.0);
+            double vi = (1.0 - temp*temp*(3.0 - 2.0*temp))*value;
+
+            int idx = getIdx(x,y,w);
+            if (std::abs(src[idx]) < std::abs(vi)) {
+                src[idx] = vi;
+            }
+
+        }
+    }
+
+
 
 }
 
-void FluidSimulator::update(double dt) {
+void FluidSimulator::update() {
 
-    //double umax = std::max(std::max(std::max(_u)),std::max(std::max(_v+sqrt(5*_dxy*abs(_gravity)))));
-    //_dt = _dxy/umax;
+//
+//    double maxV = *std::max_element(_v.begin(), _v.end(), absCompare);
+//    double maxU = *std::max_element(_u.begin(), _u.end(), absCompare);
+//
+//    double umax = std::max(maxU, maxV + sqrt(5 * _dxy * std::abs(_GRAVITY)));
+//    _dt = umax > 0.00005 ? _dxy/umax : 0.0025;
 
+    _dt = 0.0025;
+
+//    std::cout << "addInFlow" << std::endl;
+
+    addInFlow( 0.45, 0.80, 0.60, 0.83, _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
+
+    addInFlow( 0.45, 0.80, 0.60, 0.83, _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
+
+//    addInFlow( 0.45, 0.80, 0.60, 0.83, nx+1, ny, 0.0, 0.5, ...
+//    dxy, 0.0, u);
+//    [ v ] = addInFlow( 0.45, 0.80, 0.60, 0.83, nx, ny+1, 0.5, 0.0, ...
+//    dxy, 0.0, v);
+
+
+
+//    std::cout << "Buoyancy" << std::endl;
     applyBuoyancy();
+//    std::cout << "buildRhs" << std::endl;
     buildRhs();
+//    std::cout << "PressureMatrix" << std::endl;
     buildPressureMatrix();
+//    std::cout << "buildPrecon" << std::endl;
     buildPrecon();
+//    std::cout << "project" << std::endl;
     project();
+//    std::cout << "applyPressure" << std::endl;
     applyPressure();
+//    std::cout << "advect" << std::endl;
     advect();
 
 
@@ -128,37 +213,37 @@ void FluidSimulator::applyPressure() {
     // Update boundaries
 
     for (int y = 0, idx = 0; y < _ny; y++, idx++) {
-        idx = getIdx(1, y, _nx + 1);
+        idx = getIdx(0, y, _nx + 1);
         _u[idx] = 0.0;
         _u[idx + 1] = 0.0;
-        idx = getIdx(_nx, y, _nx + 1);
+        idx = getIdx(_nx-1, y, _nx + 1);
         _u[idx] = 0.0;
         _u[idx + 1] = 0.0;
     }
 
 
     for (int x = 0, idx = 0; x < _nx; x++, idx++) {
-        idx = getIdx(x, 1, _nx);
+        idx = getIdx(x, 0, _nx);
         _v[idx] = 0.0;
         _v[idx + 1] = 0.0;
-        idx = getIdx(x, _ny, _nx);
+        idx = getIdx(x, _ny-1, _nx);
         _v[idx] = 0.0;
         _v[idx + _nx] = 0.0;
     }
 
 
     for (int y = 0, idx = 0; y < _ny; y++, idx++) {
-        idx = getIdx(1, y, _nx);
+        idx = getIdx(0, y, _nx);
         _T[idx] = TAMB;
-        idx = getIdx(_nx, y, _nx);
+        idx = getIdx(_nx-1, y, _nx);
         _T[idx] = TAMB;
     }
 
 
     for (int x = 0, idx = 0; x < _nx; x++, idx++) {
-        idx = getIdx(x, 1, _nx);
+        idx = getIdx(x, 0, _nx);
         _T[idx] = TAMB;
-        idx = getIdx(x, _ny, _nx);
+        idx = getIdx(x, _ny-1, _nx);
         _T[idx] = TAMB;
     }
 }
@@ -230,10 +315,10 @@ void FluidSimulator::applyPrecon() {
         for (int x = _nx - 1; x >= 0; x--, idx--) {
             double t = _z[idx];
 
-            if (x < _nx) {
+            if (x < _nx - 1) {
                 t = t - _Aplusi[idx] * _precon[idx] * _z[idx + 1];
             }
-            if (y < _ny) {
+            if (y < _ny - 1) {
                 t = t - _Aplusj[idx] * _precon[idx] * _z[idx + _nx];
             }
 
@@ -257,6 +342,17 @@ void FluidSimulator::applyBuoyancy() {
 
         }
     }
+
+    for (int x = 0; x < _nx; x++ ) {
+        int idx = getIdx(x,0,_nx);
+        _v[idx] = 0.0;
+        _v[idx+1] = 0.0;
+        idx = getIdx(x,_ny-1,_nx);
+//        std::cout << idx << std::endl;
+        _v[idx] = 0.0;
+        _v[idx+_nx] = 0.0;
+    }
+
 
 
 }
@@ -292,7 +388,7 @@ void FluidSimulator::advect() {
         for (int idX = 0; idX <= _nx; idX++) {
 
             //offset
-            x = idX + 0.5;
+            x = idX + 0.0;
             y = idY + 0.5;
 
             rungeKutta3(x, y);
@@ -310,7 +406,7 @@ void FluidSimulator::advect() {
 
             //offset
             x = idX + 0.5;
-            y = idY + 0.5;
+            y = idY + 0.0;
 
             rungeKutta3(x, y);
 
@@ -460,5 +556,14 @@ double FluidSimulator::lerp2(double x, double y, double ox, double oy, int w, in
 
     return lerp(lerp(x00, x10, x), lerp(x01, x11, x), y);
 
+
+}
+
+double FluidSimulator::getTimestep() {
+    return _dt;
+}
+
+std::vector<double> &FluidSimulator::getDensity() {
+    return _d;
 
 }
