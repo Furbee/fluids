@@ -30,6 +30,9 @@ int main(void) {
     std::vector<double> density = fluidSimulator.getDensity();
 
 
+    double maxDensity = *std::max_element(density.begin(), density.end(), absCompare);
+
+    std::cout << maxDensity << std::endl;
 
 
     //Renderer::draw();

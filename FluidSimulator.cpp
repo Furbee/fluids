@@ -18,7 +18,8 @@ FluidSimulator::FluidSimulator() {
     length = _nx * _ny;
 
     _dxy = 1.0 / std::min(_nx, _ny);
-    _dt = 0.0025;
+//    _dt = 0.0025;
+    _dt = 1.0 / 60.0;
     _umax = 0.0;
 
     _Adiag = std::vector<double>(length, 0);
@@ -50,6 +51,8 @@ void FluidSimulator::project() {
 
     double t;
 
+    std::fill(_pressure.begin(), _pressure.end(), 0.0);
+    std::fill(_z.begin(), _z.end(), 0.0);
 
 //  Apply precon
 
@@ -73,14 +76,19 @@ void FluidSimulator::project() {
         for (int y = 0, idx = 0; y < _ny; y++) {
             for (int x = 0; x < _nx; x++, idx++) {
                 t = _Adiag[idx] * _s[idx];
-                if (x > 0)
+
+                if (x > 0) {
                     t = t + _Aplusi[idx - 1] * _s[idx - 1];
-                else if (y > 0)
+                }
+                if (y > 0) {
                     t = t + _Aplusj[idx - _nx] * _s[idx - _nx];
-                else if (x < _nx - 1)
+                }
+                if (x < _nx - 1) {
                     t = t + _Aplusi[idx] * _s[idx + 1];
-                else if (y < _ny - 1)
+                }
+                if (y < _ny - 1) {
                     t = t + _Aplusj[idx] * _s[idx + _nx];
+                }
 
                 _z[idx] = t;
             }
@@ -109,9 +117,10 @@ void FluidSimulator::project() {
         scaleAdd(_s, _z, _s, sigmaNew / sigma);
         sigma = sigmaNew;
 
-        std::cout << "Exceeded budget of " << _ITERLIMIT << " iterations, maximum error was " << maxError << std::endl;
-
     }
+
+    std::cout << "Exceeded budget of " << _ITERLIMIT << " iterations, maximum error was " << maxError << std::endl;
+
 
 }
 
@@ -154,7 +163,6 @@ void FluidSimulator::update() {
 //    double umax = std::max(maxU, maxV + sqrt(5 * _dxy * std::abs(_GRAVITY)));
 //    _dt = umax > 0.00005 ? _dxy/umax : 0.0025;
 
-    _dt = 0.0025;
 
 //    std::cout << "addInFlow" << std::endl;
 
@@ -167,6 +175,8 @@ void FluidSimulator::update() {
     addInFlow(0.45, 0.80, 0.60, 0.83, _nx, _ny + 1, 0.5, 0.0, _dxy, 0.0, _v);
 
 
+//    std::cout << "Buoyancy" << std::endl;
+    applyBuoyancy();
 
 //    std::cout << "buildRhs" << std::endl;
     buildRhs();
@@ -181,12 +191,7 @@ void FluidSimulator::update() {
 //    std::cout << "advect" << std::endl;
     advect();
 
-//    std::cout << "Buoyancy" << std::endl;
-    applyBuoyancy();
 
-    double maxDensity = *std::max_element(_d.begin(), _d.end(), absCompare);
-
-    std::cout << maxDensity << std::endl;
 
 }
 
@@ -248,7 +253,7 @@ void FluidSimulator::applyPressure() {
 
 void FluidSimulator::buildRhs() {
 
-    double scale = 1 / _dxy;
+    double scale = 1.0 / _dxy;
 
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++, idx++) {
@@ -280,8 +285,9 @@ void FluidSimulator::buildPrecon() {
                 e = e - (py * py + _tau_mic * px * py);
             }
 
-            if (e < _sigma_mic * _Adiag[idx])
+            if (e < _sigma_mic * _Adiag[idx]) {
                 e = _Adiag[idx];
+            }
 
             _precon[idx] = 1.0 / sqrt(e);
 
@@ -296,12 +302,12 @@ void FluidSimulator::applyPrecon() {
         for (int x = 0; x < _nx; x++, idx++) {
             double t = _rhs[idx];
 
-            if (x > 1) {
-                t = t - _Aplusi[idx - 1] * _precon[idx - 1] * _z[idx - 1];
+            if (x > 0) {
+                t -= _Aplusi[idx - 1] * _precon[idx - 1] * _z[idx - 1];
             }
 
-            if (y > 1) {
-                t = t - _Aplusj[idx - _nx] * _precon[idx - _nx] * _z[idx - _nx];
+            if (y > 0) {
+                t -= _Aplusj[idx - _nx] * _precon[idx - _nx] * _z[idx - _nx];
             }
 
             _z[idx] = t * _precon[idx];
@@ -309,18 +315,23 @@ void FluidSimulator::applyPrecon() {
         }
     }
 
-    for (int y = _ny - 1, idx = _nx * _ny - 1; y >= 0; y--) {
-        for (int x = _nx - 1; x >= 0; x--, idx--) {
+    int idx = 0;
+    for (int y = _ny - 1; y >= 0; y--) {
+        for (int x = _nx - 1; x >= 0; x--) {
+
+            idx = getIdx(x,y,_nx);
+
             double t = _z[idx];
 
             if (x < _nx - 1) {
-                t = t - _Aplusi[idx] * _precon[idx] * _z[idx + 1];
+                t -= _Aplusi[idx] * _precon[idx] * _z[idx + 1];
             }
             if (y < _ny - 1) {
-                t = t - _Aplusj[idx] * _precon[idx] * _z[idx + _nx];
+                t -= _Aplusj[idx] * _precon[idx] * _z[idx + _nx];
             }
 
             _z[idx] = t * _precon[idx];
+
         }
     }
 }
