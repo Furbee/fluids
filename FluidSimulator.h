@@ -18,7 +18,7 @@ public:
 
     double getTimestep();
 
-    std::vector<double> &getDensity();
+    unsigned char* getDensityImage();
 
 
 private:
@@ -36,6 +36,8 @@ private:
 
 
     // Member variables
+
+    unsigned char* image;
 
     unsigned int _nx;
     unsigned int _ny;

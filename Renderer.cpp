@@ -17,6 +17,12 @@
 using namespace glm;
 
 
+Renderer::Renderer(unsigned int width, unsigned int height) : IMAGE_WIDTH(width), IMAGE_HEIGHT(height) {
+    frameBuffer = 0;
+
+}
+
+
 void Renderer::error_callback(int error, const char *description) {
     fputs(description, stderr);
 }
@@ -26,22 +32,10 @@ void Renderer::key_callback(GLFWwindow *window, int key, int scancode, int actio
         glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
-void Renderer::render(GLFWwindow *window) {
 
-}
+void Renderer::init(unsigned char* image) {
 
-void Renderer::init() {
-
-    /*******************************************
-     *              SIZE OF WINDOW
-     ******************************************/
-    const GLuint HEIGHT = 480, WIDTH = 640;
-
-    /*******************************************
-     *              DECLARATIONS
-     ******************************************/
-
-    GLFWwindow *window;
+    _image = image;
 
     glfwSetErrorCallback(error_callback);
 
@@ -77,65 +71,66 @@ void Renderer::init() {
 
     glViewport(0, 0, WIDTH, HEIGHT);
 
-    Shader Shaders("../shaders/vertShader.vert", "../shaders/fragShader.frag");
 
-    GLuint VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    shader = new Shader("../shaders/vertShader.vert", "../shaders/fragShader.frag");
 
-    Shaders.Use();
-    glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+//    glGenVertexArrays(1, &VAO);
+//    glGenBuffers(1, &VBO);
+
+//    glBindVertexArray(VAO);
+
+//    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     GLuint frameBuffer = 0;
     glGenFramebuffers(1, &frameBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
-
-    GLuint renderedTexture;
     glGenTextures(1, &renderedTexture);
     // "Bind" the newly created texture : all future texture functions will modify this texture
     glBindTexture(GL_TEXTURE_2D, renderedTexture);
-
-
-
-
-
-
-
-
-    // Give an empty image to OpenGL ( the last "0" )
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, 1024, 768, 0,GL_RGB, GL_UNSIGNED_BYTE, 0);
-
-    // Poor filtering. Needed !
+    // Filtering
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+    // Give an empty image to OpenGL ( the last "0" )
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, _image);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D,0);
 
-    glBindVertexArray(0);
 
-    /***********************************************
-     *                  RUNTIME
-     **********************************************/
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    while (!glfwWindowShouldClose(window)) {
-        render(window);
+//    glBindVertexArray(0);
 
-        glfwPollEvents();
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+}
 
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
+void Renderer::render() {
 
-        glfwSwapBuffers(window);
-        //glfwWaitEvents();
-    }
+    glfwPollEvents();
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glUniform1i(glGetUniformLocation(shader->Program, "ourTexture1"), 0);
+    shader->Use();
+
+
+
+    glfwSwapBuffers(window);
+    //glfwWaitEvents();
+
+
+}
+
+void Renderer::cleanup() {
+
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 
@@ -145,5 +140,5 @@ void Renderer::init() {
     glfwTerminate();
     exit(EXIT_SUCCESS);
 
-}
 
+}

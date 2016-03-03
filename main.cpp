@@ -1,40 +1,29 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <GL/glew.h>
-
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 
 #include "FluidSimulator.h"
 #include "Renderer.h"
 
 
-#define GLSL(src) #src
-
-
 int main(void) {
 
+    const unsigned int texWidth = 128, texHeight = 128;
+
     FluidSimulator fluidSimulator;
+    Renderer renderer(texWidth,texHeight);
+    renderer.init(fluidSimulator.getDensityImage());
 
     double time = 0.0;
 
     while (time < 4.0) {
 
         fluidSimulator.update();
+        renderer.render();
 
         time += fluidSimulator.getTimestep();
 
     }
 
-    std::vector<double> density = fluidSimulator.getDensity();
+    renderer.cleanup();
 
 
-    double maxDensity = *std::max_element(density.begin(), density.end(), absCompare);
-
-    std::cout << maxDensity << std::endl;
-
-
-    //Renderer::draw();
 
 }

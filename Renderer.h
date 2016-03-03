@@ -19,23 +19,32 @@
 class Renderer {
 
 public:
-    Renderer() {};
+    Renderer(unsigned int width, unsigned int height);
 
-    static void init();
-    static void draw(std::vector<double> densityValues);
+    void init(unsigned char* image);
+    void render();
+    void cleanup();
 
 
 private:
 
-    //Functions
+    // Member variables
 
-    std::vector<float> pixels;
+    const GLuint HEIGHT = 480, WIDTH = 640;
+    const GLuint IMAGE_HEIGHT, IMAGE_WIDTH;
+    unsigned char* _image;
+
+    GLuint VBO, VAO, frameBuffer, renderedTexture;
+    Shader* shader;
+    GLFWwindow *window;
+
+
+    //Functions
 
     static void error_callback(int error, const char *description);
 
     static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
 
-    static void render(GLFWwindow *window);
 
 };
 

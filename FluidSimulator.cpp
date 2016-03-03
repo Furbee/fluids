@@ -44,6 +44,9 @@ FluidSimulator::FluidSimulator() {
     _precon = std::vector<double>(length, 0);
 
 
+    image = new unsigned char[ _nx * _ny * 3 ];
+
+
 }
 
 
@@ -572,7 +575,15 @@ double FluidSimulator::getTimestep() {
     return _dt;
 }
 
-std::vector<double> &FluidSimulator::getDensity() {
-    return _d;
 
+unsigned char *FluidSimulator::getDensityImage() {
+
+        for (int i = 0; i < _nx*_ny; i++) {
+            unsigned char shade = (unsigned char)((1.0 - _d[i])*255.0);
+            shade = std::max(std::min(shade, (unsigned char)255), (unsigned char)0);
+
+            image[i*3 + 0] = shade;
+            image[i*3 + 1] = shade;
+            image[i*3 + 2] = shade;
+        }
 }
