@@ -10,6 +10,9 @@ set(GLFW_SOURCE_DIR "external/glfw")
 set(GLM_SOURCE_DIR "external/glm")
 set(GLEW_SOURCE_DIR "external/glew")
 
+find_package(OpenGL REQUIRED)
+
+
 # Building only the GLFW lib
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
@@ -23,6 +26,8 @@ include_directories(${GLFW_SOURCE_DIR}/include
                     ${GLFW_SOURCE_DIR}/deps
                     ${GLM_SOURCE_DIR}
                     ${GLEW_SOURCE_DIR}/include)
+include_directories( ${OPENGL_INCLUDE_DIRS} )
+
 
 add_library(glew STATIC
   ${GLEW_SOURCE_DIR}/src/glew.c
@@ -36,7 +41,7 @@ add_definitions(
 )
 
 add_executable(fluid-simulation main.cpp Renderer.cpp Renderer.h FluidSimulator.cpp FluidSimulator.h Shader.cpp Shader.h)
-target_link_libraries("fluid-simulation" glfw ${GLFW_LIBRARIES} glew)
+target_link_libraries("fluid-simulation" glfw ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} glew)
 
 #if (APPLE)
 #  set(APP_NAME "OpenGLBoilerplate")
@@ -56,10 +61,3 @@ target_link_libraries("fluid-simulation" glfw ${GLFW_LIBRARIES} glew)
 #  set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_LONG_VERSION_STRING "1.0")
 #  set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_STRING "OpenGL boilerplate example app")
 #endif()
-
-find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
-
-include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
-
-target_link_libraries(fluid-simulation ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} )

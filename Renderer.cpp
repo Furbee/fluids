@@ -77,7 +77,7 @@ void Renderer::draw() {
 
     glViewport(0, 0, WIDTH, HEIGHT);
 
-    Shader Shaders("shaders/vertShader.vert", "shaders/fragShader.frag");
+    Shader Shaders("../shaders/vertShader.vert", "../shaders/fragShader.frag");
 
     // Vertex corner points
     GLfloat vertices[] = {
