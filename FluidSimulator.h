@@ -15,9 +15,10 @@ public:
     FluidSimulator();
 
     void update();
+
     double getTimestep();
 
-    std::vector<double>& getDensity();
+    std::vector<double> &getDensity();
 
 
 private:
@@ -45,9 +46,6 @@ private:
     double _dxy;
     double _dt;
     double _umax;
-
-
-
 
 
     std::vector<double> _Adiag;
@@ -130,5 +128,10 @@ private:
 
     void scaleAdd(std::vector<double> &curr, std::vector<double> &a, std::vector<double> &b, double s);
 };
+
+
+static bool absCompare(double a, double b) {
+    return (std::abs(a) < std::abs(b));
+}
 
 

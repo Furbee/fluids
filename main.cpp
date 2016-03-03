@@ -10,7 +10,6 @@
 #include "Renderer.h"
 
 
-
 #define GLSL(src) #src
 
 
@@ -20,13 +19,15 @@ int main(void) {
 
     double time = 0.0;
 
-    while(time < 8.0) {
+    while (time < 4.0) {
 
         fluidSimulator.update();
 
         time += fluidSimulator.getTimestep();
 
     }
+
+    std::vector<double> density = fluidSimulator.getDensity();
 
 
 
