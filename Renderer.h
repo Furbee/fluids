@@ -34,7 +34,7 @@ private:
     const GLuint IMAGE_HEIGHT, IMAGE_WIDTH;
     unsigned char* _image;
 
-    GLuint VBO, VAO, frameBuffer, renderedTexture;
+    GLuint VBO, VAO, IBO, frameBuffer, renderedTexture;
     Shader* shader;
     GLFWwindow *window;
 

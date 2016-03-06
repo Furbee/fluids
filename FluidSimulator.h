@@ -12,13 +12,17 @@ class FluidSimulator {
 
 
 public:
-    FluidSimulator();
+    FluidSimulator(unsigned int, unsigned int);
+
+
+    virtual ~FluidSimulator();
 
     void update();
 
     double getTimestep();
 
-    unsigned char* getDensityImage();
+    unsigned char* getImagePtr();
+    void updateImage();
 
 
 private:
@@ -84,7 +88,7 @@ private:
 
     // Functions
 
-    inline int getIdx(int i, int j, int width) {
+    inline unsigned int getIdx(int i, int j, int width) {
         return i + j * width;
     }
 

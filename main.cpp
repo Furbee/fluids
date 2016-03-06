@@ -1,4 +1,3 @@
-
 #include "FluidSimulator.h"
 #include "Renderer.h"
 
@@ -7,23 +6,25 @@ int main(void) {
 
     const unsigned int texWidth = 128, texHeight = 128;
 
-    FluidSimulator fluidSimulator;
-    Renderer renderer(texWidth,texHeight);
-    renderer.init(fluidSimulator.getDensityImage());
+    FluidSimulator fluidSimulator(texWidth, texHeight);
+    Renderer renderer(texWidth, texHeight);
+    renderer.init(fluidSimulator.getImagePtr());
 
     double time = 0.0;
 
-    while (time < 4.0) {
+    while (time < 20.0) {
 
-        fluidSimulator.update();
+        for (int i = 0; i < 4; i++) {
+            fluidSimulator.update();
+            time += fluidSimulator.getTimestep();
+        }
+        fluidSimulator.updateImage();
         renderer.render();
 
-        time += fluidSimulator.getTimestep();
 
     }
 
     renderer.cleanup();
-
 
 
 }

@@ -3,16 +3,6 @@
 //
 
 #include "Renderer.h"
-#include "Shader.h"
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <GL/glew.h>
-
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <iostream>
-#include <OpenGL/gl.h>
 
 using namespace glm;
 
@@ -33,7 +23,7 @@ void Renderer::key_callback(GLFWwindow *window, int key, int scancode, int actio
 }
 
 
-void Renderer::init(unsigned char* image) {
+void Renderer::init(unsigned char *image) {
 
     _image = image;
 
@@ -69,62 +59,113 @@ void Renderer::init(unsigned char* image) {
     glewExperimental = GL_TRUE;
     glewInit();
 
-    glViewport(0, 0, WIDTH, HEIGHT);
-
+    // fix for HiDPI displays
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);
 
     shader = new Shader("../shaders/vertShader.vert", "../shaders/fragShader.frag");
 
 
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
 
-//    glGenVertexArrays(1, &VAO);
-//    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-//    glBindVertexArray(VAO);
 
-//    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // data for a fullscreen quad (this time with texture coords)
+    GLfloat vertexData[] = {
+            //  X     Y     Z           U     V
+            1.0f, 1.0f, 0.0f, 1.0f, 1.0f, // vertex 0
+            -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // vertex 1
+            1.0f, -1.0f, 0.0f, 1.0f, 0.0f, // vertex 2
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // vertex 3
+    }; // 4 vertices with 5 components (floats) each
 
-    GLuint frameBuffer = 0;
-    glGenFramebuffers(1, &frameBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+    // fill with data
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 5, vertexData, GL_STATIC_DRAW);
 
+
+    // set up generic attrib pointers
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (char *) 0 + 0 * sizeof(GLfloat));
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (char *) 0 + 3 * sizeof(GLfloat));
+
+
+    // generate and bind the index buffer object
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+
+    GLuint indexData[] = {
+            0, 1, 2, // first triangle
+            2, 1, 3, // second triangle
+    };
+
+    // fill with data
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * 2 * 3, indexData, GL_STATIC_DRAW);
+
+    // "unbind" vao
+    glBindVertexArray(0);
+
+
+    // generate a texture
     glGenTextures(1, &renderedTexture);
     // "Bind" the newly created texture : all future texture functions will modify this texture
     glBindTexture(GL_TEXTURE_2D, renderedTexture);
+
+
     // Filtering
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
     // Give an empty image to OpenGL ( the last "0" )
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, _image);
-
-    glBindTexture(GL_TEXTURE_2D,0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
 
-//    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-//    glBindVertexArray(0);
 
 
 }
 
 void Renderer::render() {
 
-    glfwPollEvents();
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+
     glClear(GL_COLOR_BUFFER_BIT);
 
 
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderedTexture);
-    glUniform1i(glGetUniformLocation(shader->Program, "ourTexture1"), 0);
     shader->Use();
 
+    // activate and bind our texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    // upload new image data to the gpu
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, _image);
+
+    // set the uniform of our current shader program
+    glUniform1i(glGetUniformLocation(shader->Program, "ourTexture1"), 0);
+
+    // bind vertex array
+    glBindVertexArray(VAO);
+
+    // draw
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+    // check for errors
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << error << std::endl;
+
+    }
 
 
     glfwSwapBuffers(window);
     //glfwWaitEvents();
+    glfwPollEvents();
 
 
 }

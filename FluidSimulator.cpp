@@ -6,20 +6,21 @@
 #include <iostream>
 #include <numeric>
 #include <iomanip>
+
 #include "FluidSimulator.h"
 
 
-FluidSimulator::FluidSimulator() {
+FluidSimulator::FluidSimulator(unsigned int width, unsigned int height) {
 
-    _nx = 64;
-    _ny = 64;
+    _nx = width;
+    _ny = height;
     _nz = 32;
 
     length = _nx * _ny;
 
     _dxy = 1.0 / std::min(_nx, _ny);
-//    _dt = 0.0025;
-    _dt = 1.0 / 60.0;
+    _dt = 0.0025;
+//    _dt = 1.0 / 60.0;
     _umax = 0.0;
 
     _Adiag = std::vector<double>(length, 0);
@@ -44,11 +45,16 @@ FluidSimulator::FluidSimulator() {
     _precon = std::vector<double>(length, 0);
 
 
-    image = new unsigned char[ _nx * _ny * 3 ];
+    image = new unsigned char[_nx * _ny * 4];
 
 
 }
 
+FluidSimulator::~FluidSimulator() {
+
+    delete image;
+
+}
 
 void FluidSimulator::project() {
 
@@ -169,6 +175,8 @@ void FluidSimulator::update() {
 
 //    std::cout << "addInFlow" << std::endl;
 
+
+
     addInFlow(0.45, 0.80, 0.60, 0.83, _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
 
     addInFlow(0.45, 0.80, 0.60, 0.83, _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
@@ -178,8 +186,6 @@ void FluidSimulator::update() {
     addInFlow(0.45, 0.80, 0.60, 0.83, _nx, _ny + 1, 0.5, 0.0, _dxy, 0.0, _v);
 
 
-//    std::cout << "Buoyancy" << std::endl;
-    applyBuoyancy();
 
 //    std::cout << "buildRhs" << std::endl;
     buildRhs();
@@ -192,8 +198,11 @@ void FluidSimulator::update() {
 //    std::cout << "applyPressure" << std::endl;
     applyPressure();
 //    std::cout << "advect" << std::endl;
-    advect();
 
+//    std::cout << "Buoyancy" << std::endl;
+    applyBuoyancy();
+
+    advect();
 
 
 }
@@ -208,50 +217,63 @@ void FluidSimulator::applyPressure() {
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++, idx++) {
             uvidx = getIdx(x, y, _nx + 1);
-            _u[uvidx] = _u[uvidx] - scale * _u[idx];
-            _u[uvidx + 1] = _u[uvidx + 1] + scale * _u[idx];
+            _u[uvidx] -= scale * _pressure[idx];
+            _u[uvidx + 1] += scale * _pressure[idx];
             uvidx = getIdx(x, y, _nx);
-            _v[uvidx] = _v[uvidx] - scale * _u[idx];
-            _v[uvidx + _nx] = _v[uvidx + _nx] + scale * _u[idx];
+            _v[uvidx] -= scale * _pressure[idx];
+            _v[uvidx + _nx] += scale * _pressure[idx];
         }
     }
 
     // Update boundaries
 
-    for (int y = 0, idx = 0; y < _ny; y++, idx++) {
+    unsigned int idx = 0;
+
+    for (int y = 0; y < _ny; y++) {
         idx = getIdx(0, y, _nx + 1);
         _u[idx] = 0.0;
         _u[idx + 1] = 0.0;
         idx = getIdx(_nx - 1, y, _nx + 1);
         _u[idx] = 0.0;
         _u[idx + 1] = 0.0;
+
+        idx = getIdx(0, y, _nx);
+        _T[idx] = TAMB;
+        idx = getIdx(_nx - 1, y, _nx);
+        _T[idx] = TAMB;
+
     }
 
 
-    for (int x = 0, idx = 0; x < _nx; x++, idx++) {
+    for (int x = 0; x < _nx; x++) {
         idx = getIdx(x, 0, _nx);
         _v[idx] = 0.0;
         _v[idx + 1] = 0.0;
         idx = getIdx(x, _ny - 1, _nx);
         _v[idx] = 0.0;
         _v[idx + _nx] = 0.0;
-    }
 
-
-    for (int y = 0, idx = 0; y < _ny; y++, idx++) {
-        idx = getIdx(0, y, _nx);
-        _T[idx] = TAMB;
-        idx = getIdx(_nx - 1, y, _nx);
-        _T[idx] = TAMB;
-    }
-
-
-    for (int x = 0, idx = 0; x < _nx; x++, idx++) {
         idx = getIdx(x, 0, _nx);
         _T[idx] = TAMB;
         idx = getIdx(x, _ny - 1, _nx);
         _T[idx] = TAMB;
     }
+
+//
+//    for (int y = 0, ; y < _ny; y++, idx++) {
+//        idx = getIdx(0, y, _nx);
+//        _T[idx] = TAMB;
+//        idx = getIdx(_nx - 1, y, _nx);
+//        _T[idx] = TAMB;
+//    }
+
+//
+//    for (int x = 0, idx = 0; x < _nx; x++, idx++) {
+//        idx = getIdx(x, 0, _nx);
+//        _T[idx] = TAMB;
+//        idx = getIdx(x, _ny - 1, _nx);
+//        _T[idx] = TAMB;
+//    }
 }
 
 void FluidSimulator::buildRhs() {
@@ -301,8 +323,10 @@ void FluidSimulator::buildPrecon() {
 
 void FluidSimulator::applyPrecon() {
 
-    for (int y = 0, idx = 0; y < _ny; y++) {
-        for (int x = 0; x < _nx; x++, idx++) {
+    for (int y = 0; y < _ny; y++) {
+        for (int x = 0; x < _nx; x++) {
+            unsigned int idx = getIdx(x, y, _nx);
+
             double t = _rhs[idx];
 
             if (x > 0) {
@@ -318,11 +342,10 @@ void FluidSimulator::applyPrecon() {
         }
     }
 
-    int idx = 0;
     for (int y = _ny - 1; y >= 0; y--) {
         for (int x = _nx - 1; x >= 0; x--) {
 
-            idx = getIdx(x,y,_nx);
+            unsigned int idx = getIdx(x, y, _nx);
 
             double t = _z[idx];
 
@@ -368,7 +391,7 @@ void FluidSimulator::applyBuoyancy() {
 
 }
 
-// NOT DONE
+
 void FluidSimulator::advect() {
     int index = 0;
 
@@ -576,14 +599,28 @@ double FluidSimulator::getTimestep() {
 }
 
 
-unsigned char *FluidSimulator::getDensityImage() {
+void FluidSimulator::updateImage() {
 
-        for (int i = 0; i < _nx*_ny; i++) {
-            unsigned char shade = (unsigned char)((1.0 - _d[i])*255.0);
-            shade = std::max(std::min(shade, (unsigned char)255), (unsigned char)0);
+    for (int i = 0; i < _nx * _ny; i++) {
+        unsigned char shade = (unsigned char) ((1.0 - _d[i]) * 255.0);
+        shade = std::max(std::min(shade, (unsigned char) 255), (unsigned char) 0);
 
-            image[i*3 + 0] = shade;
-            image[i*3 + 1] = shade;
-            image[i*3 + 2] = shade;
-        }
+        image[i * 4 + 0] = shade;
+        image[i * 4 + 1] = shade;
+        image[i * 4 + 2] = shade;
+        image[i * 4 + 3] = 0xFF;
+
+//            int temp = static_cast<int>(image[i*3]);
+//
+//            if(temp < 255 ) {
+//                std::cout << temp << std::endl;
+//            }
+
+    }
 }
+
+unsigned char *FluidSimulator::getImagePtr() {
+    return image;
+}
+
+
