@@ -2,8 +2,6 @@
 *.asv
 *.avi
 
-external/glew/
-
 ### C++ template
 # Compiled Object files
 *.slo
