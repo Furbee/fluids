@@ -1,5 +1,6 @@
 #include "FluidSimulator.h"
 #include "Renderer.h"
+#include <iomanip>
 #include "external/lodepng/lodepng.h"
 
 
@@ -25,7 +26,7 @@ int main(void) {
         }
 
         std::ostringstream ostring_stream;
-        ostring_stream << "images/Frame" << iterations++ << ".png";
+        ostring_stream << "images/Frame" << std::setfill('0') << std::setw(5) << iterations++ << ".png";
         lodepng::encode(ostring_stream.str(), fluidSimulator.getImagePtr(), texWidth, texHeight);
 
 
