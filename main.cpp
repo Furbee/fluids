@@ -20,8 +20,7 @@ int main(void) {
         }
         fluidSimulator.updateImage();
         renderer.render();
-
-
+        renderer.displayFPS();
     }
 
     renderer.cleanup();

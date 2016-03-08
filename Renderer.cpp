@@ -170,6 +170,31 @@ void Renderer::render() {
 
 }
 
+void Renderer::displayFPS() {
+    static double t0 = 0.0;
+    static int frames = 0;
+    double fps = 0.0;
+    double frametime = 0.0;
+    static char titlestring[200];
+
+    double t;
+
+    // Get current time
+    t = glfwGetTime();  // Gets number of seconds since glfwInit()
+    // If one second has passed, or if this is the very first frame
+    if( (t-t0) > 1.0 || frames == 0 )
+    {
+        fps = (double)frames / (t-t0);
+        if(frames > 0) frametime = 1000.0 * (t-t0) / frames;
+        sprintf(titlestring, "FluidSimulator, %.2f ms/frame (%.1f FPS)", frametime, fps);
+        glfwSetWindowTitle(window, titlestring);
+        // printf("Speed: %.1f FPS\n", fps);
+        t0 = t;
+        frames = 0;
+    }
+    frames ++;
+}
+
 void Renderer::cleanup() {
 
     glDeleteVertexArrays(1, &VAO);
