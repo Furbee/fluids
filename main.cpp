@@ -1,5 +1,6 @@
 #include "FluidSimulator.h"
 #include "Renderer.h"
+#include "external/lodepng/lodepng.h"
 
 
 int main(void) {
@@ -12,14 +13,20 @@ int main(void) {
 
     double time = 0.0;
 
+    unsigned int iterations = 0;
+
     while (time < 20.0) {
 
         for (int i = 0; i < 4; i++) {
             fluidSimulator.update();
             time += fluidSimulator.getTimestep();
+            fluidSimulator.updateImage();
+            renderer.render();
         }
-        fluidSimulator.updateImage();
-        renderer.render();
+
+        std::ostringstream ostring_stream;
+        ostring_stream << "images/Frame" << iterations++ << ".png";
+        lodepng::encode(ostring_stream.str(), fluidSimulator.getImagePtr(), texWidth, texHeight);
 
 
     }

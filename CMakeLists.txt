@@ -9,6 +9,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(GLFW_SOURCE_DIR "external/glfw")
 set(GLM_SOURCE_DIR "external/glm")
 set(GLEW_SOURCE_DIR "external/glew")
+set(LODEPNG_SOURCE_DIR "external/lodepng")
 
 find_package(OpenGL REQUIRED)
 
@@ -23,25 +24,31 @@ set(GLFW_INSTALL OFF CACHE BOOL "")
 add_subdirectory(${GLFW_SOURCE_DIR} ${GLEW_SOURCE_DIR})
 
 include_directories(${GLFW_SOURCE_DIR}/include
-                    ${GLFW_SOURCE_DIR}/deps
-                    ${GLM_SOURCE_DIR}
-                    ${GLEW_SOURCE_DIR}/include)
-include_directories( ${OPENGL_INCLUDE_DIRS} )
+        ${GLFW_SOURCE_DIR}/deps
+        ${GLM_SOURCE_DIR}
+        ${GLEW_SOURCE_DIR}/include)
+include_directories(${OPENGL_INCLUDE_DIRS})
 
 
 add_library(glew STATIC
-  ${GLEW_SOURCE_DIR}/src/glew.c
-  ${GLEW_SOURCE_DIR}/include
-)
+        ${GLEW_SOURCE_DIR}/src/glew.c
+        ${GLEW_SOURCE_DIR}/include
+        )
+
+ADD_LIBRARY(lodepng
+        ${LODEPNG_SOURCE_DIR}/lodepng.cpp
+        ${LODEPNG_SOURCE_DIR}/lodepng.h
+        )
+
 
 target_link_libraries(glew ${GLFW_LIBRARIES})
 
 add_definitions(
-  -DGLEW_STATIC
+        -DGLEW_STATIC
 )
 
 add_executable(fluid-simulation main.cpp Renderer.cpp Renderer.h FluidSimulator.cpp FluidSimulator.h Shader.cpp Shader.h)
-target_link_libraries("fluid-simulation" glfw ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} glew)
+target_link_libraries("fluid-simulation" lodepng glfw ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} glew)
 
 #if (APPLE)
 #  set(APP_NAME "OpenGLBoilerplate")

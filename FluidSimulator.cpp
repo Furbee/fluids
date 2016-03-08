@@ -23,6 +23,8 @@ FluidSimulator::FluidSimulator(unsigned int width, unsigned int height) {
 //    _dt = 1.0 / 60.0;
     _umax = 0.0;
 
+    std::srand(std::time(0));
+
     _Adiag = std::vector<double>(length, 0);
     _Aplusi = std::vector<double>(length, 0);
     _Aplusj = std::vector<double>(length, 0);
@@ -45,14 +47,14 @@ FluidSimulator::FluidSimulator(unsigned int width, unsigned int height) {
     _precon = std::vector<double>(length, 0);
 
 
-    image = new unsigned char[_nx * _ny * 4];
+    _image = new unsigned char[_nx * _ny * 4];
 
 
 }
 
 FluidSimulator::~FluidSimulator() {
 
-    delete image;
+    delete _image;
 
 }
 
@@ -177,13 +179,55 @@ void FluidSimulator::update() {
 
 
 
-    addInFlow(0.45, 0.80, 0.60, 0.83, _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
+    int random_variable = 75 + std::rand() % 30;
 
-    addInFlow(0.45, 0.80, 0.60, 0.83, _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
+    double inflow_x = 0.45;
+    double inflow_x_width = 0.10;
+    double inflow_y = 0.80;
+    double inflow_y_height = 0.03;
 
-    addInFlow(0.45, 0.80, 0.60, 0.83, _nx + 1, _ny, 0.0, 0.5, _dxy, 0.0, _u);
 
-    addInFlow(0.45, 0.80, 0.60, 0.83, _nx, _ny + 1, 0.5, 0.0, _dxy, 0.0, _v);
+    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
+
+    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
+
+    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
+
+    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
+
+//    inflow_x = 0.15;
+//    inflow_y = 0.80;
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
+//
+//    inflow_x = 0.75;
+//    inflow_y = 0.80;
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
 
 
 
@@ -603,22 +647,16 @@ void FluidSimulator::updateImage() {
         unsigned char shade = (unsigned char) ((1.0 - _d[i]) * 255.0);
         shade = std::max(std::min(shade, (unsigned char) 255), (unsigned char) 0);
 
-        image[i * 4 + 0] = shade;
-        image[i * 4 + 1] = shade;
-        image[i * 4 + 2] = shade;
-        image[i * 4 + 3] = 0xFF;
-
-//            int temp = static_cast<int>(image[i*3]);
-//
-//            if(temp < 255 ) {
-//                std::cout << temp << std::endl;
-//            }
+        _image[i * 4 + 0] = shade;
+        _image[i * 4 + 1] = shade;
+        _image[i * 4 + 2] = shade;
+        _image[i * 4 + 3] = 0xFF;
 
     }
 }
 
 unsigned char *FluidSimulator::getImagePtr() {
-    return image;
+    return _image;
 }
 
 
