@@ -6,6 +6,7 @@
 #include <iostream>
 #include <numeric>
 #include <iomanip>
+#include <algorithm>
 
 #include "FluidSimulator.h"
 
