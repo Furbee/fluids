@@ -198,11 +198,9 @@ void FluidSimulator::update() {
 //    std::cout << "applyPressure" << std::endl;
     applyPressure();
 //    std::cout << "advect" << std::endl;
-
+    advect();
 //    std::cout << "Buoyancy" << std::endl;
     applyBuoyancy();
-
-    advect();
 
 
 }
