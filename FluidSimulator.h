@@ -21,7 +21,8 @@ public:
 
     double getTimestep();
 
-    unsigned char* getImagePtr();
+    unsigned char *getImagePtr();
+
     void updateImage();
 
 
@@ -35,14 +36,16 @@ private:
     const double _DENSITYSOOT = 0.25;
     const double _DENSITYAIR = 0.1;
     const double TAMB = 273;
-    const double KDISS = 0.1;
+    const double KDISS = 0.001;
     const int _ITERLIMIT = 600;
     const double PI = 3.14159265;
+    const double _TOL = 10e-5;
 
+    int pulse_time;
 
     // Member variables
 
-    unsigned char*_image;
+    unsigned char *_image;
 
     unsigned int _nx;
     unsigned int _ny;
@@ -107,6 +110,8 @@ private:
 
     double cerp2(double x, double y, int w, int h, double ox, double oy, std::vector<double> &quantity);
 
+
+    void addInFlow();
 
     void addInFlow(double x0, double y0, double x1, double y1, int w, int h, double ox, double oy, double dxy,
                    double value,

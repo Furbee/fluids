@@ -23,6 +23,8 @@ FluidSimulator::FluidSimulator(unsigned int width, unsigned int height) {
 //    _dt = 1.0 / 60.0;
     _umax = 0.0;
 
+    pulse_time = 0;
+
     std::srand(std::time(0));
 
     _Adiag = std::vector<double>(length, 0);
@@ -60,6 +62,15 @@ FluidSimulator::~FluidSimulator() {
 
 void FluidSimulator::project() {
 
+
+    //    std::cout << "buildRhs" << std::endl;
+    buildRhs();
+//    std::cout << "PressureMatrix" << std::endl;
+    buildPressureMatrix();
+//    std::cout << "buildPrecon" << std::endl;
+    buildPrecon();
+
+
     double t;
 
     std::fill(_pressure.begin(), _pressure.end(), 0.0);
@@ -73,7 +84,7 @@ void FluidSimulator::project() {
 
     double maxError = std::abs(*std::max_element(_rhs.begin(), _rhs.end(), absCompare));
 
-    if (maxError < 1e-5)
+    if (maxError < _TOL)
         return;
 
     double sigma = std::inner_product(_rhs.begin(), _rhs.end(), _z.begin(), 0.0);
@@ -109,12 +120,16 @@ void FluidSimulator::project() {
 
 //  Scaled add
 
+//        std::transform(_pressure.begin(), _pressure.end(), _s.begin(), _pressure.begin(),
+//                       [&alpha](double &d1, double &d2) {
+//                           return d1 + alpha * d2;
+//                       });
         scaleAdd(_pressure, _pressure, _s, alpha);
         scaleAdd(_rhs, _rhs, _z, -alpha);
 
         maxError = std::abs(*std::max_element(_rhs.begin(), _rhs.end(), absCompare));
 
-        if (maxError < 1e-5) {
+        if (maxError < _TOL) {
             std::cout << "Exiting solver after " << iter << " iterarions, maximum error is " << maxError << std::endl;
             return;
         }
@@ -131,6 +146,69 @@ void FluidSimulator::project() {
     }
 
     std::cout << "Exceeded budget of " << _ITERLIMIT << " iterations, maximum error was " << maxError << std::endl;
+
+
+}
+
+
+void FluidSimulator::addInFlow() {
+
+
+
+//    inflow_x = 0.15;
+//    inflow_y = 0.80;
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
+//
+//    inflow_x = 0.75;
+//    inflow_y = 0.80;
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
+//
+//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+//              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
+
+
+    int random_variable = 75 + std::rand() % 30;
+
+    double inflow_x = 0.45;
+    double inflow_x_width = 0.05;
+    double inflow_y = 0.80;
+    double inflow_y_height = 0.03;
+
+    //double noisetest = std::abs(sin((test++)* PI / 180))*
+
+    double noisefactor = 5.0 * cos(random_variable * PI / 180);
+//    double smoke_intensity = std::abs(sin((pulse_time += 5) * PI / 180));
+
+    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
+
+    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 1400.0, _T);
+
+    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+              _nx + 1, _ny, 0.0, 0.5, _dxy, 0.0, _u);
+
+    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
+              _nx, _ny + 1, 0.5, 0.0, _dxy, 0.0, _v);
 
 
 }
@@ -170,81 +248,23 @@ void FluidSimulator::update() {
 //
 //    double maxV = *std::max_element(_v.begin(), _v.end(), absCompare);
 //    double maxU = *std::max_element(_u.begin(), _u.end(), absCompare);
-//
-//    double umax = std::max(maxU, maxV + sqrt(5 * _dxy * std::abs(_GRAVITY)));
-//    _dt = umax > 0.00005 ? _dxy/umax : 0.0025;
+////
+//    double umax = std::max(std::abs(maxU), std::abs(maxV + sqrt(5 * _dxy * std::abs(_GRAVITY))));
+//    std::cout << _dt/umax << std::endl;
+//    _dt = _dxy/umax;
+//    _dt = _dt < 0.01 ? _dt : 0.0025;
 
 
-//    std::cout << "addInFlow" << std::endl;
-
-
-
-    int random_variable = 75 + std::rand() % 30;
-
-    double inflow_x = 0.45;
-    double inflow_x_width = 0.10;
-    double inflow_y = 0.80;
-    double inflow_y_height = 0.03;
-
-
-    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
-
-    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
-
-    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
-
-    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
-
-//    inflow_x = 0.15;
-//    inflow_y = 0.80;
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
-//
-//    inflow_x = 0.75;
-//    inflow_y = 0.80;
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
-
-
-
-//    std::cout << "buildRhs" << std::endl;
-    buildRhs();
-//    std::cout << "PressureMatrix" << std::endl;
-    buildPressureMatrix();
-//    std::cout << "buildPrecon" << std::endl;
-    buildPrecon();
-//    std::cout << "project" << std::endl;
-    project();
-//    std::cout << "applyPressure" << std::endl;
-    applyPressure();
-//    std::cout << "advect" << std::endl;
+    //    std::cout << "advect" << std::endl;
     advect();
-//    std::cout << "Buoyancy" << std::endl;
+    //    std::cout << "addInFlow" << std::endl;
+    addInFlow();
+    //    std::cout << "Buoyancy" << std::endl;
     applyBuoyancy();
+    //    std::cout << "project" << std::endl;
+    project();
+    //    std::cout << "applyPressure" << std::endl;
+    applyPressure();
 
 
 }
