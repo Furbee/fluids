@@ -13,6 +13,9 @@ set(LODEPNG_SOURCE_DIR "external/lodepng")
 
 find_package(OpenGL REQUIRED)
 
+if (MINGW)
+SET(CMAKE_EXE_LINKER_FLAGS "-static")
+endif(MINGW)
 
 # Building only the GLFW lib
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
@@ -29,6 +32,10 @@ include_directories(${GLFW_SOURCE_DIR}/include
         ${GLEW_SOURCE_DIR}/include)
 include_directories(${OPENGL_INCLUDE_DIRS})
 
+add_definitions(
+        -DTW_STATIC
+        -DGLEW_STATIC
+)
 
 add_library(glew STATIC
         ${GLEW_SOURCE_DIR}/src/glew.c
@@ -41,11 +48,9 @@ ADD_LIBRARY(lodepng
         )
 
 
-target_link_libraries(glew ${GLFW_LIBRARIES})
+target_link_libraries(glew ${OPENGL_LIBRARIES})
 
-add_definitions(
-        -DGLEW_STATIC
-)
+
 
 add_executable(fluid-simulation main.cpp Renderer.cpp Renderer.h FluidSimulator.cpp FluidSimulator.h Shader.cpp Shader.h)
 target_link_libraries("fluid-simulation" lodepng glfw ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} glew)
