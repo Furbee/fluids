@@ -11,37 +11,39 @@
 #include "FluidSimulator.h"
 
 
+/*
+ * Comparison function used when calculating the error in the PCG algorithm
+ */
+bool absCompare(double a, double b) {
+    return (std::abs(a) < std::abs(b));
+}
+
 FluidSimulator::FluidSimulator(unsigned int width, unsigned int height) {
 
     _nx = width;
     _ny = height;
-    _nz = 32;
 
     length = _nx * _ny;
 
     _dxy = 1.0 / std::min(_nx, _ny);
     _dt = 0.0025;
 //    _dt = 1.0 / 60.0;
-    _umax = 0.0;
 
-    pulse_time = 0;
+//    pulse_time = 0;
 
     std::srand(std::time(0));
 
     _Adiag = std::vector<double>(length, 0);
     _Aplusi = std::vector<double>(length, 0);
     _Aplusj = std::vector<double>(length, 0);
-    _Aplusk = std::vector<double>(length, 0);
     _rhs = std::vector<double>(length, 0);
-    _pressure = std::vector<double>(length, 0);
+    _p = std::vector<double>(length, 0);
     _s = std::vector<double>(length, 0);
     _z = std::vector<double>(length, 0);
     _u = std::vector<double>((_nx + 1) * _ny, 0);
     _un = std::vector<double>((_nx + 1) * _ny, 0);
     _v = std::vector<double>(_nx * (_ny + 1), 0);
     _vn = std::vector<double>(_nx * (_ny + 1), 0);
-//    std::vector<double> _w
-//    std::vector<double> _wn;
 
     _d = std::vector<double>(length, 0);
     _dn = std::vector<double>(length, 0);
@@ -74,7 +76,7 @@ void FluidSimulator::project() {
 
     double t;
 
-    std::fill(_pressure.begin(), _pressure.end(), 0.0);
+    std::fill(_p.begin(), _p.end(), 0.0);
     std::fill(_z.begin(), _z.end(), 0.0);
 
 //  Apply precon
@@ -125,7 +127,7 @@ void FluidSimulator::project() {
 //                       [&alpha](double &d1, double &d2) {
 //                           return d1 + alpha * d2;
 //                       });
-        scaleAdd(_pressure, _pressure, _s, alpha);
+        scaleAdd(_p, _p, _s, alpha);
         scaleAdd(_rhs, _rhs, _z, -alpha);
 
         maxError = std::abs(*std::max_element(_rhs.begin(), _rhs.end(), absCompare));
@@ -187,7 +189,7 @@ void FluidSimulator::addInFlow() {
 //              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
 
 
-    int random_variable = 75 + std::rand() % 30;
+//    int random_variable = 75 + std::rand() % 30;
 
     double inflow_x = 0.45;
     double inflow_x_width = 0.05;
@@ -196,7 +198,7 @@ void FluidSimulator::addInFlow() {
 
     //double noisetest = std::abs(sin((test++)* PI / 180))*
 
-    double noisefactor = 5.0 * cos(random_variable * PI / 180);
+//    double noisefactor = 5.0 * cos(random_variable * PI / 180);
 //    double smoke_intensity = std::abs(sin((pulse_time += 5) * PI / 180));
 
     addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
@@ -280,11 +282,11 @@ void FluidSimulator::applyPressure() {
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++, idx++) {
             uvidx = getIdx(x, y, _nx + 1);
-            _u[uvidx] -= scale * _pressure[idx];
-            _u[uvidx + 1] += scale * _pressure[idx];
+            _u[uvidx] -= scale * _p[idx];
+            _u[uvidx + 1] += scale * _p[idx];
             uvidx = getIdx(x, y, _nx);
-            _v[uvidx] -= scale * _pressure[idx];
-            _v[uvidx + _nx] += scale * _pressure[idx];
+            _v[uvidx] -= scale * _p[idx];
+            _v[uvidx + _nx] += scale * _p[idx];
         }
     }
 
@@ -605,9 +607,8 @@ void FluidSimulator::scaleAdd(std::vector<double> &curr, std::vector<double> &a,
 
 void FluidSimulator::buildPressureMatrix() {
 
-    // Set up matrix entities for the pressure equations
     double scale = _dt / (_RHO * _dxy * _dxy);
-    std::fill(_Adiag.begin(), _Adiag.end(), 0.0); // Coeffcient matrix for pressure equations
+    std::fill(_Adiag.begin(), _Adiag.end(), 0.0);
     std::fill(_Aplusi.begin(), _Aplusi.end(), 0.0);
     std::fill(_Aplusj.begin(), _Aplusj.end(), 0.0);
 
