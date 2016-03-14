@@ -13,6 +13,9 @@ set(LODEPNG_SOURCE_DIR "external/lodepng")
 
 find_package(OpenGL REQUIRED)
 
+if (MINGW)
+SET(CMAKE_EXE_LINKER_FLAGS "-static")
+endif(MINGW)
 
 # Building only the GLFW lib
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
@@ -30,6 +33,7 @@ include_directories(${GLFW_SOURCE_DIR}/include
 include_directories(${OPENGL_INCLUDE_DIRS})
 
 add_definitions(
+        -DTW_STATIC
         -DGLEW_STATIC
 )
 
