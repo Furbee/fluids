@@ -1,7 +1,6 @@
 //
 // Created by Oscar Nord on 01/03/16.
 //
-// Taken from learnopengl.com
 
 #include "Shader.h"
 #include <string>
@@ -41,13 +40,11 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath) {
         fragmentCode = fShaderStream.str();
     }
 
-
     catch (std::ifstream::failure e) {
         std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
     }
     const GLchar *vShaderCode = vertexCode.c_str();
     const GLchar *fShaderCode = fragmentCode.c_str();
-
 
     // Compile shaders
     GLuint vertex, fragment;
@@ -59,14 +56,12 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath) {
     glShaderSource(vertex, 1, &vShaderCode, NULL);
     glCompileShader(vertex);
 
-
     // Print compile errors if any
     glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(vertex, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
-
 
     // Fragment Shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -79,7 +74,6 @@ Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath) {
         glGetShaderInfoLog(fragment, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
-
 
     // Shader Program
     this->Program = glCreateProgram();
