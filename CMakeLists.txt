@@ -14,8 +14,8 @@ set(LODEPNG_SOURCE_DIR "external/lodepng")
 find_package(OpenGL REQUIRED)
 
 if (MINGW)
-SET(CMAKE_EXE_LINKER_FLAGS "-static")
-endif(MINGW)
+    SET(CMAKE_EXE_LINKER_FLAGS "-static")
+endif (MINGW)
 
 # Building only the GLFW lib
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
@@ -47,29 +47,24 @@ ADD_LIBRARY(lodepng
         ${LODEPNG_SOURCE_DIR}/lodepng.h
         )
 
-
 target_link_libraries(glew ${OPENGL_LIBRARIES})
-
 
 
 add_executable(fluid-simulation main.cpp Renderer.cpp Renderer.h FluidSimulator.cpp FluidSimulator.h Shader.cpp Shader.h)
 target_link_libraries("fluid-simulation" lodepng glfw ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} glew)
 
+#SET(SHADERS "shaders/fragShader.frag" "shaders/vertShader.vert")
+#
 #if (APPLE)
-#  set(APP_NAME "OpenGLBoilerplate")
+#    set(APP_NAME "OpenGLBoilerplate")
 #
-#  if (EXISTS icon.icns)
-#    add_executable(${APP_NAME} MACOSX_BUNDLE main.cpp icon.icns)
-#    set_source_files_properties("icon.icns" PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-#  else ()
-#    add_executable(${APP_NAME} MACOSX_BUNDLE main.cpp)
-#  endif ()
+#    add_executable(${APP_NAME} MACOSX_BUNDLE main.cpp Renderer.cpp Renderer.h FluidSimulator.cpp FluidSimulator.h Shader.cpp Shader.h ${SHADERS})
+#    set_source_files_properties(${SHADERS} PROPERTIES MACOSX_PACKAGE_LOCATION "shaders")
 #
-#  target_link_libraries(${APP_NAME} glfw ${OPENGL_glu_LIBRARY} ${GLFW_LIBRARIES} glew)
-#  set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE "icon.icns")
+#    target_link_libraries(${APP_NAME} lodepng glfw ${OPENGL_LIBRARIES} ${GLFW_LIBRARIES} glew)
 #
-#  set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME ${APP_NAME})
-#  set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0")
-#  set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_LONG_VERSION_STRING "1.0")
-#  set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_STRING "OpenGL boilerplate example app")
-#endif()
+#    set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_BUNDLE_NAME ${APP_NAME})
+#    set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0")
+#    set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_LONG_VERSION_STRING "1.0")
+#    set_target_properties(${APP_NAME} PROPERTIES MACOSX_BUNDLE_INFO_STRING "OpenGL boilerplate example app")
+#endif ()

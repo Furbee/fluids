@@ -28,11 +28,12 @@ FluidSimulator::FluidSimulator(unsigned int width, unsigned int height) {
     _dxy = 1.0 / std::min(_nx, _ny);
     _dt = 0.0025;
 //    _dt = 1.0 / 60.0;
-
 //    pulse_time = 0;
 
     std::srand(std::time(0));
 
+
+    // Initialize the storage vectors with zeros
     _Adiag = std::vector<double>(length, 0);
     _Aplusi = std::vector<double>(length, 0);
     _Aplusj = std::vector<double>(length, 0);
@@ -44,14 +45,13 @@ FluidSimulator::FluidSimulator(unsigned int width, unsigned int height) {
     _un = std::vector<double>((_nx + 1) * _ny, 0);
     _v = std::vector<double>(_nx * (_ny + 1), 0);
     _vn = std::vector<double>(_nx * (_ny + 1), 0);
-
     _d = std::vector<double>(length, 0);
     _dn = std::vector<double>(length, 0);
     _T = std::vector<double>(length, 0);
     _Tn = std::vector<double>(length, 0);
     _precon = std::vector<double>(length, 0);
 
-
+    // Initialize the image
     _image = new unsigned char[_nx * _ny * 4];
 
 
@@ -74,30 +74,32 @@ void FluidSimulator::project() {
     buildPrecon();
 
 
-    double t;
 
+
+    // Reset the pressure vector and the temporary z vector
     std::fill(_p.begin(), _p.end(), 0.0);
     std::fill(_z.begin(), _z.end(), 0.0);
 
-//  Apply precon
-
-    applyPrecon();
+    applyPrecon(); // Apply the preconditioner
 
     _s = _z;
 
+    // Calculate the initial error
     double maxError = std::abs(*std::max_element(_rhs.begin(), _rhs.end(), absCompare));
 
+    // If the error is below the specified tolerance level, just return
     if (maxError < _TOL)
         return;
 
+    // Calculate the dot product of the negative divergence vector and the z vector
     double sigma = std::inner_product(_rhs.begin(), _rhs.end(), _z.begin(), 0.0);
 
-// Iterative solver
+    double t; // Temporary variable
 
+    // Iterative solver
     for (int iter = 0; iter < _ITERLIMIT; ++iter) {
 
-// Matrix vector product
-
+        // Calculate the matrix vector product
         for (int y = 0, idx = 0; y < _ny; y++) {
             for (int x = 0; x < _nx; x++, idx++) {
                 t = _Adiag[idx] * _s[idx];
@@ -119,26 +121,23 @@ void FluidSimulator::project() {
             }
         }
 
+        //
         double alpha = sigma / std::inner_product(_z.begin(), _z.end(), _s.begin(), 0.0);
 
-//  Scaled add
-
-//        std::transform(_pressure.begin(), _pressure.end(), _s.begin(), _pressure.begin(),
-//                       [&alpha](double &d1, double &d2) {
-//                           return d1 + alpha * d2;
-//                       });
+        //  Scaled add
         scaleAdd(_p, _p, _s, alpha);
         scaleAdd(_rhs, _rhs, _z, -alpha);
 
+        // Calculate new error
         maxError = std::abs(*std::max_element(_rhs.begin(), _rhs.end(), absCompare));
 
+        // Error check again
         if (maxError < _TOL) {
             std::cout << "Exiting solver after " << iter << " iterarions, maximum error is " << maxError << std::endl;
             return;
         }
 
-//  Apply precon
-
+        // Apply precon again
         applyPrecon();
 
         double sigmaNew = std::inner_product(_rhs.begin(), _rhs.end(), _z.begin(), 0.0);
@@ -156,41 +155,7 @@ void FluidSimulator::project() {
 
 void FluidSimulator::addInFlow() {
 
-
-
-//    inflow_x = 0.15;
-//    inflow_y = 0.80;
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
-//
-//    inflow_x = 0.75;
-//    inflow_y = 0.80;
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny, 0.5, 0.5, _dxy, TAMB + 300.0, _T);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx + 1, _ny, 0.0, 0.5, _dxy, 5.0 * cos(random_variable * PI / 180), _u);
-//
-//    addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
-//              _nx, _ny + 1, 0.5, 0.0, _dxy, -1.0, _v);
-
-
-//    int random_variable = 75 + std::rand() % 30;
-
+    // Where the inflow should come from
     double inflow_x = 0.45;
     double inflow_x_width = 0.05;
     double inflow_y = 0.80;
@@ -198,9 +163,10 @@ void FluidSimulator::addInFlow() {
 
     //double noisetest = std::abs(sin((test++)* PI / 180))*
 
-//    double noisefactor = 5.0 * cos(random_variable * PI / 180);
-//    double smoke_intensity = std::abs(sin((pulse_time += 5) * PI / 180));
+    // double noisefactor = 5.0 * cos(random_variable * PI / 180);
+    // double smoke_intensity = std::abs(sin((pulse_time += 5) * PI / 180));
 
+    // Add inflows
     addInFlow(inflow_x, inflow_y, inflow_x + inflow_x_width, inflow_y + inflow_y_height,
               _nx, _ny, 0.5, 0.5, _dxy, 1.0, _d);
 
@@ -221,14 +187,17 @@ void FluidSimulator::addInFlow(double x0, double y0, double x1, double y1, int w
                                double value,
                                std::vector<double> &src) {
 
+    // Calculate the cell indices that correspond to the supplied position values
     int ix0 = (int) (x0 / dxy - ox);
     int iy0 = (int) (y0 / dxy - oy);
     int ix1 = (int) (x1 / dxy - ox);
     int iy1 = (int) (y1 / dxy - oy);
 
 
+    // Loop over every cell in the area that should have inflow added
     for (int y = std::max(iy0, 0); y < std::min(iy1, h); y++) {
         for (int x = std::max(ix0, 0); x < std::min(ix1, h); x++) {
+
             double l = hypot((2.0 * (x + 0.5) * dxy - (x0 + x1)) / (x1 - x0),
                              (2.0 * (y + 0.5) * dxy - (y0 + y1)) / (y1 - y0));
 
@@ -236,6 +205,7 @@ void FluidSimulator::addInFlow(double x0, double y0, double x1, double y1, int w
             double vi = (1.0 - temp * temp * (3.0 - 2.0 * temp)) * value;
 
             int idx = getIdx(x, y, w);
+            // If the calculated inflow value is larger than the current values, set to the inflow value
             if (std::abs(src[idx]) < std::abs(vi)) {
                 src[idx] = vi;
             }
@@ -248,15 +218,13 @@ void FluidSimulator::addInFlow(double x0, double y0, double x1, double y1, int w
 
 void FluidSimulator::update() {
 
-//
-//    double maxV = *std::max_element(_v.begin(), _v.end(), absCompare);
-//    double maxU = *std::max_element(_u.begin(), _u.end(), absCompare);
-////
-//    double umax = std::max(std::abs(maxU), std::abs(maxV + sqrt(5 * _dxy * std::abs(_GRAVITY))));
+    // Calculate the timestep
+    double maxV = *std::max_element(_v.begin(), _v.end(), absCompare);
+    double maxU = *std::max_element(_u.begin(), _u.end(), absCompare);
+    double umax = std::max(std::abs(maxU), std::abs(maxV + sqrt(5 * _dxy * std::abs(_GRAVITY))));
 //    std::cout << _dt/umax << std::endl;
-//    _dt = _dxy/umax;
-//    _dt = _dt < 0.01 ? _dt : 0.0025;
-
+    _dt = _dxy / umax;
+    _dt = _dt < 0.01 ? _dt : 0.0025;
 
     //    std::cout << "advect" << std::endl;
     advect();
@@ -274,11 +242,11 @@ void FluidSimulator::update() {
 
 void FluidSimulator::applyPressure() {
 
-    // Apply pressure
-
     double scale = _dt / (_RHO * _dxy);
+
     int uvidx = 0;
 
+    // Apply the calculated pressure
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++, idx++) {
             uvidx = getIdx(x, y, _nx + 1);
@@ -291,7 +259,6 @@ void FluidSimulator::applyPressure() {
     }
 
     // Update boundaries
-
     unsigned int idx = 0;
 
     for (int y = 0; y < _ny; y++) {
@@ -309,7 +276,6 @@ void FluidSimulator::applyPressure() {
 
     }
 
-
     for (int x = 0; x < _nx; x++) {
         idx = getIdx(x, 0, _nx);
         _v[idx] = 0.0;
@@ -324,27 +290,13 @@ void FluidSimulator::applyPressure() {
         _T[idx] = TAMB;
     }
 
-//
-//    for (int y = 0, ; y < _ny; y++, idx++) {
-//        idx = getIdx(0, y, _nx);
-//        _T[idx] = TAMB;
-//        idx = getIdx(_nx - 1, y, _nx);
-//        _T[idx] = TAMB;
-//    }
-
-//
-//    for (int x = 0, idx = 0; x < _nx; x++, idx++) {
-//        idx = getIdx(x, 0, _nx);
-//        _T[idx] = TAMB;
-//        idx = getIdx(x, _ny - 1, _nx);
-//        _T[idx] = TAMB;
-//    }
 }
 
 void FluidSimulator::buildRhs() {
 
     double scale = 1.0 / _dxy;
 
+    // Calculate the negative divergence for each cell
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++, idx++) {
             _rhs[idx] = -scale * ((_u[getIdx(x + 1, y, _nx + 1)] - _u[getIdx(x, y, _nx + 1)])
@@ -358,6 +310,7 @@ void FluidSimulator::buildRhs() {
 
 void FluidSimulator::buildPrecon() {
 
+    // Build the MIC preconditioner
     for (int y = 0, idx = 0; y < _ny; y++) {
         for (int x = 0; x < _nx; x++, idx++) {
 
@@ -437,18 +390,19 @@ void FluidSimulator::applyBuoyancy() {
 
             double buoyancy = _dt * _GRAVITY * (alpha * _d[idx] - (_T[idx] - TAMB) / TAMB);
 
+            // Spread the calculated buoyancy between cells
             _v[idx] += buoyancy * 0.5;
             _v[idx + _nx] += buoyancy * 0.5;
 
         }
     }
 
+    // Enforce boundaries
     for (int x = 0; x < _nx; x++) {
         int idx = getIdx(x, 0, _nx);
         _v[idx] = 0.0;
         _v[idx + 1] = 0.0;
         idx = getIdx(x, _ny - 1, _nx);
-//        std::cout << idx << std::endl;
         _v[idx] = 0.0;
         _v[idx + _nx] = 0.0;
     }
@@ -460,6 +414,7 @@ void FluidSimulator::applyBuoyancy() {
 void FluidSimulator::advect() {
     int index = 0;
 
+    // Advect the smoke density/concentration and temperature
     for (int idY = 0; idY < _ny; idY++) {
         for (int idX = 0; idX < _nx; idX++) {
 
@@ -470,9 +425,7 @@ void FluidSimulator::advect() {
             rungeKutta3(x, y);
 
             _dn[index] = cerp2(x, y, _nx, _ny, 0.5, 0.5, _d);
-
             _dn[index] = std::max(0.0, _dn[index] * exp(-KDISS * _dt));
-
             _Tn[index] = cerp2(x, y, _nx, _ny, 0.5, 0.5, _T);
             index++;
         }
@@ -480,6 +433,7 @@ void FluidSimulator::advect() {
 
     index = 0;
 
+    // Advect the x velocity
     for (int idY = 0; idY < _ny; idY++) {
         for (int idX = 0; idX <= _nx; idX++) {
 
@@ -497,6 +451,7 @@ void FluidSimulator::advect() {
 
     index = 0;
 
+    // Advect the y velocity
     for (int idY = 0; idY <= _ny; idY++) {
         for (int idX = 0; idX < _nx; idX++) {
 
@@ -669,10 +624,12 @@ void FluidSimulator::updateImage() {
         unsigned char shade = (unsigned char) ((1.0 - _d[i]) * 255.0);
         shade = std::max(std::min(shade, (unsigned char) 255), (unsigned char) 0);
 
+        // Set every color channel to the smoke density value
         _image[i * 4 + 0] = shade;
         _image[i * 4 + 1] = shade;
         _image[i * 4 + 2] = shade;
-        _image[i * 4 + 3] = 0xFF;
+
+        _image[i * 4 + 3] = 0xFF; // Make the image opaque
 
     }
 }

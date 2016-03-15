@@ -21,26 +21,44 @@ class Renderer {
 public:
     Renderer(unsigned int width, unsigned int height);
 
-    void init(unsigned char* image);
+    /*
+     * Initialize the GLFW context
+     */
+    void init(unsigned char *image);
+
+    /*
+     * Render the image using OpenGL
+     */
     void render();
+
+    /*
+     * Cleanup the GLFW context
+     */
     void cleanup();
+
+    GLFWwindow *window; // Pointer to the GLFW window
 
 
 private:
 
-    // Member variables
-
+    /*
+     * Constants
+     */
     const GLuint HEIGHT = 480, WIDTH = 640;
-    const GLuint IMAGE_HEIGHT, IMAGE_WIDTH;
-    unsigned char* _image;
-
-    GLuint VBO, VAO, IBO, frameBuffer, renderedTexture;
-    Shader* shader;
-    GLFWwindow *window;
 
 
-    //Functions
+    /*
+     * Member variables
+     */
+    const GLuint IMAGE_WIDTH, IMAGE_HEIGHT;
+    unsigned char *_image;
+    GLuint VBO, VAO, IBO, renderedTexture;
+    Shader *shader;
 
+
+    /*
+     * GLFW specific functions
+     */
     static void error_callback(int error, const char *description);
 
     static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);

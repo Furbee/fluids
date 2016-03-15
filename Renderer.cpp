@@ -8,7 +8,6 @@ using namespace glm;
 
 
 Renderer::Renderer(unsigned int width, unsigned int height) : IMAGE_WIDTH(width), IMAGE_HEIGHT(height) {
-    frameBuffer = 0;
 
 }
 
@@ -63,6 +62,7 @@ void Renderer::init(unsigned char *image) {
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
+
 
     shader = new Shader("../shaders/vertShader.vert", "../shaders/fragShader.frag");
 
@@ -125,19 +125,13 @@ void Renderer::init(unsigned char *image) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, IMAGE_WIDTH, IMAGE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
 
-
-
 }
 
 void Renderer::render() {
 
+    glClear(GL_COLOR_BUFFER_BIT); // Clear the window
 
-
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-
-    shader->Use();
+    shader->Use(); // Use the shaders
 
     // activate and bind our texture
     glActiveTexture(GL_TEXTURE0);
