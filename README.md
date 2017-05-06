@@ -1,6 +1,7 @@
 # fluid-simulation
 
-##TNM085
+## TNM085 (Modeling project)
+http://kdb-5.liu.se/liu/lith/studiehandboken/enkursplan.lasso
 
 ## Authors:
 - [Viktor Hellman](https://github.com/vhellman)
